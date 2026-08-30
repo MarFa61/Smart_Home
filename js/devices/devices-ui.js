@@ -139,7 +139,7 @@ function renderDevicesHeader() {
   });
 
   const actionsColEl = document.createElement('col');
-  actionsColEl.style.width = '90px';
+  actionsColEl.style.width = '120px'; // 90px + 33%
   colgroup.appendChild(actionsColEl);
   const actionsTh = document.createElement('th');
   actionsTh.className = 'sticky-actions';

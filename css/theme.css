@@ -509,7 +509,7 @@ dialog {
    TABELLA Devices — colonne ordinabili, filtrabili, ridimensionabili
    (pattern AnagrafePersoneView/ColumnWidthStore di Incarichi/Oratori)
    ========================================================= */
-.sortable-th {
+.compact-table th.sortable-th {
   overflow: visible; /* il resize handle e il popover filtro non devono essere tagliati */
   padding-right: 12px !important;
 }
