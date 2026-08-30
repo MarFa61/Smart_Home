@@ -39,9 +39,9 @@ class DevicesStore {
       if (candidate.nickname && device.nickname === candidate.nickname) {
         conflicts.push(`Nickname "${candidate.nickname}" già usato da un altro dispositivo.`);
       }
-      if (candidate.devId && device.devId === candidate.devId) {
-        conflicts.push(`Dev. Id. "${candidate.devId}" già usato da un altro dispositivo.`);
-      }
+      // Dev. Id. non deve essere univoco da solo (es. "meteo" è legittimo su più stazioni
+      // meteo in zone diverse): a doverlo essere è l'Host Name completo (Categoria+Zona+
+      // Tipo+Dev.Id), controllato subito sotto.
 
       const deviceHostName = computeHostName(device.devCategory, device.devZone, device.devType, device.devId);
       if (candidateHostName && deviceHostName === candidateHostName) {
