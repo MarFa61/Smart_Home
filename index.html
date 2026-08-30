@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Home</title>
+  <link rel="stylesheet" href="./css/theme.css">
+  <script src="./js/vendor/msal-browser.min.js"></script>
+  <script src="./js/storage/StorageProvider.js" defer></script>
+  <script src="./js/storage/OneDriveProvider.js" defer></script>
+  <script src="./js/storage/config.js" defer></script>
+  <script src="./js/app-storage.js" defer></script>
+  <script src="./js/devices/lookups.js" defer></script>
+  <script src="./js/devices/hostname.js" defer></script>
+  <script src="./js/devices/DevicesStore.js" defer></script>
+  <script src="./js/devices/devices-ui.js" defer></script>
+  <script src="./js/config/ConfigStore.js" defer></script>
+  <script src="./js/config/color-components.js" defer></script>
+  <script src="./js/config/ColorStore.js" defer></script>
+  <script src="./js/config/colori-ui.js" defer></script>
+  <script src="./js/config/backup-ui.js" defer></script>
+  <script src="./js/app.js" defer></script>
+</head>
+<body>
+
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-brand">Smart Home</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-item active" data-section="devices">
+          <span class="icon">📦</span>
+          <span>Devices</span>
+        </li>
+        <li class="sidebar-item" data-section="config">
+          <span class="icon">⚙️</span>
+          <span>Config</span>
+        </li>
+      </ul>
+    </nav>
+
+    <main class="content-area">
+      <section id="section-devices" class="section-view active">
+        <div class="win">
+          <h1>Devices</h1>
+
+          <div class="toolbar-grid">
+            <div class="toolbar-search">
+              <input class="search" id="devicesSearch" placeholder="🔍 Cerca per Nickname, Marca, Host Name, IP...">
+            </div>
+            <div id="devicesConnStatus" style="font-size:13px; color:#888;">Non connesso a OneDrive.</div>
+            <div class="toolbar-btn" style="display:flex; gap:10px;">
+              <button class="btn btn-primary-add" id="btnDevicesConnect">Connetti a OneDrive</button>
+              <button class="btn btn-primary-add" id="btnDeviceNew" style="display:none;">➕ Nuovo Device</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table id="devicesTable" class="compact-table">
+              <thead>
+                <tr>
+                  <th class="sticky-col">Nickname</th>
+                  <th>Marca</th>
+                  <th>Modello</th>
+                  <th>Avanzamento</th>
+                  <th>Categoria</th>
+                  <th>Zona</th>
+                  <th>Tipo</th>
+                  <th>Host Name</th>
+                  <th>IP</th>
+                  <th>HomeKit</th>
+                  <th>Automazioni</th>
+                  <th>Disponibile</th>
+                  <th>Note</th>
+                  <th class="sticky-actions">Azioni</th>
+                </tr>
+              </thead>
+              <tbody id="devicesTableBody"></tbody>
+            </table>
+          </div>
+          <p class="placeholder" id="devicesEmptyMessage">Nessun dispositivo. Connettiti a OneDrive per iniziare.</p>
+        </div>
+      </section>
+
+      <section id="section-config" class="section-view">
+        <div class="win">
+          <h1>Backup &amp; Restore</h1>
+          <p style="font-size:13px; color:#666; margin-top:-10px;">Esporta uno snapshot di Devices e Colori in un file JSON locale, o ripristina da un backup precedente.</p>
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button class="btn btn-primary-add" id="btnBackupDownload">📥 Scarica Backup</button>
+            <label class="btn edit" style="cursor:pointer;">
+              📤 Ripristina da file…
+              <input type="file" id="inputRestoreFile" accept="application/json" style="display:none;">
+            </label>
+          </div>
+          <p id="backupStatus" style="font-size:13px; color:#666; margin-top:10px;"></p>
+        </div>
+
+        <div class="win" style="margin-top:16px;">
+          <h1>Colori</h1>
+          <div id="coloriConnectPrompt">
+            <button class="btn btn-primary-add" id="btnColoriConnect">Connetti a OneDrive</button>
+            <span id="coloriConnStatus" style="font-size:13px; color:var(--text-secondary); margin-left:10px;"></span>
+          </div>
+          <div id="coloriForm" style="display:none;">
+            <p style="font-size:13px; color:var(--text-secondary); margin-top:-6px;">Scena "Finestra e tabella" — passa il mouse su uno swatch per sapere dove viene usato.</p>
+
+            <h2 style="font-size:15px; margin-bottom:12px;">Insieme: Finestra e tabella</h2>
+
+            <div class="colori-scene-tema">
+              <div class="colori-tema-label">Chiaro</div>
+              <div id="colori-tema-chiaro-preview"></div>
+              <div id="colori-tema-chiaro-swatches" class="colori-swatch-grid"></div>
+            </div>
+
+            <div class="colori-scene-tema">
+              <div class="colori-tema-label">Scuro</div>
+              <div id="colori-tema-scuro-preview"></div>
+              <div id="colori-tema-scuro-swatches" class="colori-swatch-grid"></div>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-primary-add" id="btnColoriSave">💾 Salva</button>
+              <button class="btn edit" id="btnColoriReset">🔄 Ripristina predefiniti</button>
+            </div>
+            <p id="coloriSaveStatus" style="font-size:13px; color:var(--text-secondary); margin-top:10px;"></p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- EDITOR DEVICE (Nuovo / Modifica) -->
+  <dialog id="deviceDlg">
+    <div class="dh">
+      <h2 id="deviceDlgTitle">Nuovo Dispositivo</h2>
+    </div>
+
+    <div class="dlg-tabs">
+      <button type="button" class="tab-btn active" data-tab="dtab-gen">Generale</button>
+      <button type="button" class="tab-btn" data-tab="dtab-net">Rete &amp; Connettività</button>
+      <button type="button" class="tab-btn" data-tab="dtab-cfg">Configurazione &amp; Gruppi</button>
+      <button type="button" class="tab-btn" data-tab="dtab-stat">Stato &amp; Note</button>
+    </div>
+
+    <div id="dtab-gen" class="tab-content active">
+      <div class="dlg-form-group">
+        <label for="devNickname">Nickname</label>
+        <input type="text" id="devNickname">
+      </div>
+      <div class="dlg-form-group">
+        <label for="devMarca">Marca</label>
+        <input type="text" id="devMarca">
+      </div>
+      <div class="dlg-form-group">
+        <label for="devModello">Modello</label>
+        <input type="text" id="devModello">
+      </div>
+      <div class="dlg-form-group">
+        <label for="devTipoDispositivo">Tipo dispositivo</label>
+        <input type="text" id="devTipoDispositivo">
+      </div>
+      <div class="dlg-form-group">
+        <label for="devProtocollo">Protocollo</label>
+        <input type="text" id="devProtocollo">
+      </div>
+      <div class="dlg-form-group">
+        <label for="devPhisicalHub">Phisical Hub</label>
+        <input type="text" id="devPhisicalHub">
+      </div>
+      <div class="dlg-form-group full-width">
+        <label for="devManagingApp">Managing App</label>
+        <input type="text" id="devManagingApp">
+      </div>
+    </div>
+
+    <div id="dtab-net" class="tab-content">
+      <div class="dlg-form-group">
+        <label for="devSSID">SSID</label>
+        <input type="text" id="devSSID">
+      </div>
+      <div class="dlg-form-group">
+        <label for="devConnSpeed">Connection Speed</label>
+        <input type="text" id="devConnSpeed">
+      </div>
+      <div class="dlg-form-group full-width">
+        <label>Host Name (generato automaticamente)</label>
+        <input type="text" id="devHostNamePreview" readonly>
+      </div>
+      <div class="dlg-form-group full-width">
+        <label>Connessioni (IP) — di norma una sola, più di una solo per dispositivi con più interfacce di rete</label>
+        <div id="devConnectionsList"></div>
+        <button type="button" class="btn edit" id="btnAddConnection" style="margin-top:6px; align-self:flex-start;">+ Aggiungi connessione</button>
+      </div>
+    </div>
+
+    <div id="dtab-cfg" class="tab-content">
+      <div class="dlg-form-group">
+        <label for="devCategory">Dev. Category</label>
+        <select id="devCategory"></select>
+      </div>
+      <div class="dlg-form-group">
+        <label for="devZone">Dev. Zone</label>
+        <select id="devZone"></select>
+      </div>
+      <div class="dlg-form-group">
+        <label for="devType">Dev. Type</label>
+        <select id="devType"></select>
+      </div>
+      <div class="dlg-form-group">
+        <label for="devId">Dev. Id.</label>
+        <input type="text" id="devId">
+      </div>
+    </div>
+
+    <div id="dtab-stat" class="tab-content">
+      <div class="dlg-form-group">
+        <label for="devAvanzamento">Avanzamento</label>
+        <select id="devAvanzamento"></select>
+      </div>
+      <div class="dlg-form-group">
+        <label for="devDisponibile">Disponibile ora?</label>
+        <label class="toolbar-chk"><input type="checkbox" id="devDisponibile"> Sì</label>
+      </div>
+
+      <div class="dlg-form-group full-width">
+        <label>Collegato a Homey?</label>
+        <div class="bool-note-row">
+          <label class="toolbar-chk"><input type="checkbox" id="devHomey"> Sì</label>
+          <input type="text" id="devHomeyNote" placeholder="Note (es. con Alexa)">
+        </div>
+      </div>
+      <div class="dlg-form-group full-width">
+        <label>Integrato in HomeKit?</label>
+        <div class="bool-note-row">
+          <label class="toolbar-chk"><input type="checkbox" id="devHomeKit"> Sì</label>
+          <input type="text" id="devHomeKitNote" placeholder="Note">
+        </div>
+      </div>
+      <div class="dlg-form-group full-width">
+        <label>Usato in automazioni?</label>
+        <div class="bool-note-row">
+          <label class="toolbar-chk"><input type="checkbox" id="devAutomazioni"> Sì</label>
+          <input type="text" id="devAutomazioniNote" placeholder="Note">
+        </div>
+      </div>
+
+      <div class="dlg-form-group full-width">
+        <label for="devNote">Note</label>
+        <textarea id="devNote" rows="3"></textarea>
+      </div>
+    </div>
+
+    <div id="deviceDlgConflicts" class="conflicts-box" style="display:none;"></div>
+
+    <div class="foot">
+      <button type="button" class="btn pow" id="btnDeviceCancel">❌ Annulla</button>
+      <button type="button" class="btn btn-primary-add" id="btnDeviceSave">💾 Salva</button>
+    </div>
+  </dialog>
+
+</body>
+</html>

@@ -1,0 +1,502 @@
+/* =========================================================
+   STILE GENERALE E TEMA
+   (base ripresa da Home Device Mgmt/theme.css)
+   ========================================================= */
+:root {
+  --primary: #0066cc;
+  --primary-hover: #004f9e;
+  --bg-main: #f4f6f9;
+  --card-bg: #ffffff;
+  --text-color: #333333;
+  --border-color: #e0e0e0;
+  --row-hover: #f1f5f9;
+  --sidebar-bg: #eef1f6;
+  --sidebar-active-bg: #d9e6fb;
+  --sidebar-active-text: var(--primary);
+  --title-color: #1a1a1a;
+  --table-header-bg: #f8f9fa;
+  --table-header-text: #555555;
+  --text-secondary: #888888;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-color);
+}
+
+/* =========================================================
+   LAYOUT: SIDEBAR + CONTENUTO
+   (equivalente HTML/CSS del NavigationSplitView di Incarichi/Oratori)
+   ========================================================= */
+.app-shell {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  min-width: 200px;
+  flex-shrink: 0;
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
+  padding-top: 20px;
+  overflow-y: auto;
+}
+
+.sidebar-brand {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--primary);
+  padding: 0 20px 20px 20px;
+}
+
+.sidebar-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-color);
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+
+.sidebar-item:hover {
+  background-color: var(--row-hover);
+}
+
+.sidebar-item.active {
+  background-color: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+  border-left-color: var(--primary);
+  font-weight: 600;
+}
+
+.sidebar-item .icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+.content-area {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+}
+
+.section-view {
+  display: none;
+}
+
+.section-view.active {
+  display: block;
+}
+
+.placeholder {
+  color: var(--text-secondary);
+  font-size: 14px;
+  padding: 40px;
+  text-align: center;
+}
+
+/* =========================================================
+   CONTENITORE "WIN" (card di base per il contenuto di una sezione)
+   ========================================================= */
+.win {
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+h1 {
+  font-size: 22px;
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: var(--title-color);
+}
+
+/* =========================================================
+   TOOLBAR & RICERCA
+   ========================================================= */
+.toolbar-grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.toolbar-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  max-width: 450px;
+}
+
+.search {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  outline: none;
+  font-size: 14px;
+}
+
+.toolbar-chk {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* TOGGLE SWITCH */
+.switch-input { display: none; }
+.switch-slider {
+  width: 34px;
+  height: 18px;
+  background-color: #ccc;
+  border-radius: 18px;
+  position: relative;
+  transition: .3s;
+  display: inline-block;
+}
+.switch-slider:before {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  background-color: white;
+  transition: .3s;
+}
+.switch-input:checked + .switch-slider { background-color: #34c759; }
+.switch-input:checked + .switch-slider:before { transform: translateX(16px); }
+
+/* BUTTONS */
+.btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+.btn-primary-add { background-color: var(--primary); color: white; }
+.btn-primary-add:hover { background-color: var(--primary-hover); }
+.btn.edit { background: #e8f0fe; color: #1a73e8; }
+.btn.pow { background: #fce8e6; color: #c5221f; }
+
+/* =========================================================
+   TABELLA ORIZZONTALE CON BLOCCO PRIMA COLONNA
+   ========================================================= */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.compact-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.compact-table th, .compact-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 13px;
+  text-align: left;
+}
+
+.compact-table th {
+  background-color: var(--table-header-bg);
+  font-weight: 600;
+  color: var(--table-header-text);
+  user-select: none;
+}
+
+.compact-table tbody tr:hover {
+  background-color: var(--row-hover);
+}
+
+/* Colonna Sticky (Nickname) */
+.compact-table th.sticky-col,
+.compact-table td.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+.compact-table td.sticky-col { background-color: var(--card-bg); font-weight: 600; }
+.compact-table th.sticky-col { background-color: var(--table-header-bg); z-index: 3; }
+.compact-table tr:hover td.sticky-col { background-color: var(--row-hover); }
+
+/* Colonna Azioni Sticky (Destra) */
+.compact-table th.sticky-actions,
+.compact-table td.sticky-actions {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+  text-align: center;
+}
+.compact-table td.sticky-actions { background-color: var(--card-bg); }
+.compact-table th.sticky-actions { background-color: var(--table-header-bg); z-index: 3; }
+.compact-table tr:hover td.sticky-actions { background-color: var(--row-hover); }
+
+/* Badge di stato */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-yes { background-color: #e6f4ea; color: #137333; }
+.badge-no { background-color: #fce8e6; color: #c5221f; }
+.badge-na { background-color: #f1f3f4; color: #5f6368; }
+
+/* =========================================================
+   MODALE RIDIMENSIONABILE A TAB
+   ========================================================= */
+dialog {
+  width: 800px;
+  min-width: 480px;
+  max-width: 95vw;
+  border: none;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  resize: both;
+  overflow: hidden;
+}
+
+.dh h2 { margin: 0 0 16px 0; font-size: 18px; }
+
+.dlg-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid var(--border-color);
+  margin-bottom: 16px;
+}
+
+.tab-btn {
+  padding: 8px 14px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-weight: 600;
+  color: #666;
+  font-size: 13px;
+}
+
+.tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.tab-content {
+  display: none;
+  max-height: 55vh;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.tab-content.active {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.full-width { grid-column: 1 / -1; }
+
+.dlg-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dlg-form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+
+.dlg-form-group input,
+.dlg-form-group select,
+.dlg-form-group textarea {
+  padding: 7px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+/* input[type=color]: il padding/border-radius generico sopra rompe il rendering
+   nativo dello swatch su Safari (il colore viene comunque salvato, ma non si vede). */
+.dlg-form-group input[type="color"] {
+  padding: 2px;
+  height: 36px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* =========================================================
+   RIGHE CONNESSIONE (Devices, tab Rete & Connettività)
+   ========================================================= */
+.connection-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.connection-row input {
+  padding: 7px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 13px;
+}
+.connection-row .conn-ip { flex: 1; }
+.connection-row .conn-note { flex: 2; }
+
+/* Coppia booleano + nota (Homey / HomeKit / Automazioni) */
+.bool-note-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.bool-note-row input[type="text"] {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+/* Box di conflitto in fase di salvataggio (Nickname/Dev.Id/Host Name/IP duplicati) */
+.conflicts-box {
+  background-color: #fce8e6;
+  color: #c5221f;
+  border: 1px solid #f4c2c0;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+/* =========================================================
+   PAGINA COLORI — scena "insieme finito" (pattern Incarichi/Oratori)
+   ========================================================= */
+.colori-scene-tema {
+  margin-bottom: 24px;
+}
+
+.colori-tema-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+/* Anteprima reale: sidebar + titolo + tabella, dentro lo sfondo finestra di quel tema */
+.colori-preview {
+  display: flex;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.colori-preview-sidebar {
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.colori-preview-main {
+  flex: 1;
+  padding: 16px;
+}
+
+.colori-preview-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.colori-preview-card {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.colori-preview-thead,
+.colori-preview-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.colori-preview-thead {
+  font-weight: 600;
+}
+
+/* Griglia degli swatch sotto ogni anteprima */
+.colori-swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px;
+}
+
+.colori-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.colori-swatch input[type="color"] {
+  width: 40px;
+  height: 28px;
+  padding: 2px;
+  cursor: pointer;
+}
+
+.colori-swatch span {
+  font-size: 10px;
+  color: var(--text-secondary);
+  line-height: 1.2;
+}
