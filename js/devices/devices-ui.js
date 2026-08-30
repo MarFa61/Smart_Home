@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function loadAndShowDevices() {
-  devicesStatusEl().textContent = 'Connesso a OneDrive.';
+  devicesStatusEl().textContent = `Connesso a OneDrive (${appStorage.connectedAccountEmail()}).`;
   document.getElementById('btnDevicesConnect').style.display = 'none';
   document.getElementById('btnDeviceNew').style.display = 'inline-block';
   await devicesStore.load();

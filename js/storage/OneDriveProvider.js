@@ -70,6 +70,11 @@ class OneDriveProvider extends StorageProvider {
     return !!this._account;
   }
 
+  /** Email dell'account OneDrive connesso, o null — utile per verificare "sono connesso con l'account giusto?". */
+  connectedAccountEmail() {
+    return this._account ? this._account.username : null;
+  }
+
   async _getAccessToken() {
     if (!this._account) throw new Error('Non connesso a OneDrive: chiamare connect() prima.');
     try {

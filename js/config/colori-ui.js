@@ -90,7 +90,7 @@ async function loadAndShowColori() {
   await configStore.load();
   applyLightThemeToApp();
   renderColoriScena();
-  document.getElementById('coloriConnStatus').textContent = 'Connesso a OneDrive.';
+  document.getElementById('coloriConnStatus').textContent = `Connesso a OneDrive (${appStorage.connectedAccountEmail()}).`;
   document.getElementById('btnColoriConnect').style.display = 'none';
   document.getElementById('coloriForm').style.display = 'block';
 }
