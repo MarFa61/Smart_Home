@@ -283,6 +283,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  document.getElementById('btnDevicesDisconnect').addEventListener('click', async () => {
+    await appStorage.disconnect();
+    devicesStore.devices = [];
+    renderDevicesTable();
+    devicesStatusEl().textContent = 'Non connesso a OneDrive.';
+    document.getElementById('btnDevicesConnect').style.display = 'inline-block';
+    document.getElementById('btnDevicesDisconnect').style.display = 'none';
+    document.getElementById('btnDeviceNew').style.display = 'none';
+  });
+
   // Connessione automatica: se una sessione OneDrive era già attiva, si salta del
   // tutto il pulsante "Connetti" e si carica direttamente l'elenco.
   appStorageReady.then(async giaConnesso => {
@@ -293,6 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadAndShowDevices() {
   devicesStatusEl().textContent = `Connesso a OneDrive (${appStorage.connectedAccountEmail()}).`;
   document.getElementById('btnDevicesConnect').style.display = 'none';
+  document.getElementById('btnDevicesDisconnect').style.display = 'inline-block';
   document.getElementById('btnDeviceNew').style.display = 'inline-block';
   await devicesStore.load();
   renderDevicesTable();
