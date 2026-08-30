@@ -39,9 +39,23 @@
   Smart Switch 1-3 (Dev.Id mancante, causava Host Name identici). Avanzamento (7 valori originali)
   mappato sui 4 nuovi; Criticità (non ancora un campo del modello) riportata in coda alle Note.
   Record di prova precedente sostituito dal ripristino.
+- **Colonne Devices ordinabili, filtrabili, ridimensionabili** (stesso pattern di
+  AnagrafePersoneView/ColumnWidthStore in Incarichi/Oratori): intestazione cliccabile per
+  ordinare (con freccia ↑/↓), icona per filtrare per valori distinti su Marca/Avanzamento/
+  Categoria/Zona/Tipo/HomeKit/Automazioni/Disponibile, trascinamento del bordo colonna per
+  ridimensionare (larghezza persistita in localStorage, per browser/device, non su OneDrive).
+  Debug non banale sull'icona filtro: prima non visibile (elemento posizionato in assoluto
+  dentro una cella con overflow:hidden, corretto passando a un layout flex in flusso normale),
+  poi visibile ma senza effetto al click (il popover, annidato dentro il `<th>`, veniva tagliato
+  dall'overflow di `.table-responsive` necessario per lo scroll orizzontale — spostato ad essere
+  appeso a `<body>` con posizione calcolata via JS). Sostituito anche il carattere Unicode "▾"
+  con un'icona SVG inline, per non dipendere dal supporto font del sistema. **Non ancora
+  confermato funzionante da Marco dopo l'ultimo fix — verificare alla ripresa.**
 
 ## Da fare — prossimo passo
 
+- [ ] **Verificare il filtro colonne Devices** dopo l'ultimo fix (popover spostato fuori dalla
+      tabella): non ancora confermato funzionante da Marco.
 - [ ] **Funzionalità Tabelle**: da approfondire con Marco — oggi Categoria/Zona/Tipo dispositivo
       sono ancora liste fisse nel codice (`js/devices/lookups.js`), copiate dal foglio Tabelle
       dell'Excel originale; l'idea è spostarle in una vera sezione Tabelle gestibile dall'utente.
