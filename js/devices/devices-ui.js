@@ -119,7 +119,8 @@ function renderDevicesHeader() {
       const filterBtn = document.createElement('button');
       filterBtn.type = 'button';
       filterBtn.className = 'col-filter-btn' + (columnFilters[col.id] ? ' active' : '');
-      filterBtn.textContent = '▾';
+      // SVG invece di un carattere Unicode (es. ▾): indipendente dal supporto font del sistema.
+      filterBtn.innerHTML = '<svg width="8" height="8" viewBox="0 0 10 10"><path d="M1 3 L5 7 L9 3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
       filterBtn.title = 'Filtra questa colonna';
       filterBtn.addEventListener('click', e => {
         e.stopPropagation();
@@ -220,7 +221,14 @@ function toggleFilterPopover(col, thEl) {
     renderDevicesTable();
   });
 
-  thEl.appendChild(popover);
+  // Appeso a <body> con posizione calcolata (non dentro il <th>): un contenitore antenato
+  // con overflow impostato (es. .table-responsive per lo scroll orizzontale) taglierebbe
+  // altrimenti il popover, essendo un blocco a comparsa che deve sporgere sotto la testata.
+  const rect = thEl.getBoundingClientRect();
+  popover.style.position = 'fixed';
+  popover.style.top = `${rect.bottom + 2}px`;
+  popover.style.left = `${rect.left}px`;
+  document.body.appendChild(popover);
 }
 
 document.addEventListener('click', () => {

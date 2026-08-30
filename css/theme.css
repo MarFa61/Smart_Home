@@ -537,14 +537,15 @@ dialog {
 
 .col-filter-btn {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: 1px solid var(--border-color);
   border-radius: 3px;
   cursor: pointer;
-  font-size: 11px;
-  line-height: 1;
   color: var(--text-secondary);
-  padding: 2px 4px;
+  padding: 3px 5px;
 }
 
 .col-filter-btn.active {
@@ -569,9 +570,9 @@ dialog {
 }
 
 .col-filter-popover {
-  position: absolute;
-  top: 100%;
-  left: 0;
+  /* position/top/left impostati via JS (position: fixed, coordinate calcolate dal
+     pulsante) — appeso a <body>, non dentro la tabella, per non essere tagliato
+     dall'overflow di .table-responsive. */
   z-index: 50;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
