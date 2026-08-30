@@ -6,11 +6,223 @@
    ========================================================= */
 
 const devicesStore = new DevicesStore(appStorage);
+const columnWidthStore = new ColumnWidthStore('devices');
 let editingDevice = null; // copia di lavoro mentre il dialog è aperto
 
 function devicesStatusEl() { return document.getElementById('devicesConnStatus'); }
 function devicesTableBodyEl() { return document.getElementById('devicesTableBody'); }
 function devicesEmptyMessageEl() { return document.getElementById('devicesEmptyMessage'); }
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+/* =========================================================
+   COLONNE: ordinabili, filtrabili (per valori distinti),
+   ridimensionabili — stesso pattern di AnagrafePersoneView
+   (colonne libere sortabili+filtrabili via elenco valori,
+   colonne descrittive lunghe come Modello/Host Name/Note
+   solo sortabili, non filtrabili).
+   ========================================================= */
+const DEVICES_COLUMNS = [
+  { id: 'nickname', title: 'Nickname', sticky: true, filterable: false, defaultWidth: 170,
+    value: d => d.nickname || '', render: d => escapeHtml(d.nickname || '') },
+  { id: 'marca', title: 'Marca', filterable: true, defaultWidth: 110,
+    value: d => d.marca || '', render: d => escapeHtml(d.marca || '') },
+  { id: 'modello', title: 'Modello', filterable: false, defaultWidth: 150,
+    value: d => d.modello || '', render: d => escapeHtml(d.modello || '') },
+  { id: 'avanzamento', title: 'Avanzamento', filterable: true, defaultWidth: 130,
+    value: d => d.avanzamento || '', render: d => escapeHtml(d.avanzamento || '') },
+  { id: 'devCategory', title: 'Categoria', filterable: true, defaultWidth: 100,
+    value: d => d.devCategory || '', render: d => escapeHtml(d.devCategory || '') },
+  { id: 'devZone', title: 'Zona', filterable: true, defaultWidth: 100,
+    value: d => d.devZone || '', render: d => escapeHtml(d.devZone || '') },
+  { id: 'devType', title: 'Tipo', filterable: true, defaultWidth: 90,
+    value: d => d.devType || '', render: d => escapeHtml(d.devType || '') },
+  { id: 'hostName', title: 'Host Name', filterable: false, defaultWidth: 210,
+    value: d => computeHostName(d.devCategory, d.devZone, d.devType, d.devId),
+    render: d => escapeHtml(computeHostName(d.devCategory, d.devZone, d.devType, d.devId)) },
+  { id: 'ip', title: 'IP', filterable: false, defaultWidth: 110,
+    value: d => (d.connections || []).map(c => c.ip).filter(Boolean).join(', '),
+    render: d => escapeHtml((d.connections || []).map(c => c.ip).filter(Boolean).join(', ')) },
+  { id: 'homekit', title: 'HomeKit', filterable: true, defaultWidth: 85,
+    value: d => !!d.integratoHomeKit, render: d => boolBadge(d.integratoHomeKit) },
+  { id: 'automazioni', title: 'Automazioni', filterable: true, defaultWidth: 100,
+    value: d => !!d.usatoAutomazioni, render: d => boolBadge(d.usatoAutomazioni) },
+  { id: 'disponibile', title: 'Disponibile', filterable: true, defaultWidth: 95,
+    value: d => !!d.disponibileOra, render: d => boolBadge(d.disponibileOra) },
+  { id: 'note', title: 'Note', filterable: false, defaultWidth: 220,
+    value: d => d.note || '', render: d => escapeHtml(d.note || '') },
+];
+
+let sortColumnId = 'nickname';
+let sortDirection = 'asc';
+const columnFilters = {}; // columnId -> Set di valori visualizzati ammessi (assente = nessun filtro)
+let openFilterColumnId = null;
+
+function compareValues(a, b) {
+  if (typeof a === 'boolean' || typeof b === 'boolean') {
+    return a === b ? 0 : (a ? 1 : -1);
+  }
+  return String(a).localeCompare(String(b), 'it', { numeric: true, sensitivity: 'base' });
+}
+
+function displayValueForFilter(rawValue) {
+  if (typeof rawValue === 'boolean') return rawValue ? 'Sì' : 'No';
+  return rawValue || '(vuoto)';
+}
+
+function renderDevicesHeader() {
+  const colgroup = document.getElementById('devicesColgroup');
+  const headerRow = document.getElementById('devicesHeaderRow');
+  colgroup.innerHTML = '';
+  headerRow.innerHTML = '';
+
+  DEVICES_COLUMNS.forEach(col => {
+    const colEl = document.createElement('col');
+    colEl.style.width = `${columnWidthStore.width(col.id, col.defaultWidth)}px`;
+    colEl.dataset.col = col.id;
+    colgroup.appendChild(colEl);
+
+    const th = document.createElement('th');
+    th.classList.add('sortable-th');
+    if (col.sticky) th.classList.add('sticky-col');
+
+    const label = document.createElement('span');
+    label.className = 'th-label';
+    label.textContent = col.title;
+    label.addEventListener('click', () => {
+      if (sortColumnId === col.id) {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortColumnId = col.id;
+        sortDirection = 'asc';
+      }
+      renderDevicesHeader();
+      renderDevicesTable();
+    });
+    th.appendChild(label);
+
+    if (sortColumnId === col.id) {
+      const arrow = document.createElement('span');
+      arrow.className = 'sort-arrow';
+      arrow.textContent = sortDirection === 'asc' ? ' ↑' : ' ↓';
+      th.appendChild(arrow);
+    }
+
+    if (col.filterable) {
+      const filterBtn = document.createElement('button');
+      filterBtn.type = 'button';
+      filterBtn.className = 'col-filter-btn' + (columnFilters[col.id] ? ' active' : '');
+      filterBtn.textContent = '▾';
+      filterBtn.title = 'Filtra questa colonna';
+      filterBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        toggleFilterPopover(col, th);
+      });
+      th.appendChild(filterBtn);
+    }
+
+    const resizeHandle = document.createElement('div');
+    resizeHandle.className = 'col-resize-handle';
+    resizeHandle.addEventListener('mousedown', e => startColumnResize(e, col));
+    th.appendChild(resizeHandle);
+
+    headerRow.appendChild(th);
+  });
+
+  const actionsColEl = document.createElement('col');
+  actionsColEl.style.width = '90px';
+  colgroup.appendChild(actionsColEl);
+  const actionsTh = document.createElement('th');
+  actionsTh.className = 'sticky-actions';
+  actionsTh.textContent = 'Azioni';
+  headerRow.appendChild(actionsTh);
+}
+
+function startColumnResize(e, col) {
+  e.preventDefault();
+  e.stopPropagation();
+  const th = e.target.closest('th');
+  const startX = e.clientX;
+  const startWidth = th.getBoundingClientRect().width;
+  const colEl = document.querySelector(`#devicesColgroup col[data-col="${col.id}"]`);
+
+  function onMove(ev) {
+    const newWidth = Math.max(50, Math.round(startWidth + (ev.clientX - startX)));
+    if (colEl) colEl.style.width = `${newWidth}px`;
+  }
+  function onUp(ev) {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    const newWidth = Math.max(50, Math.round(startWidth + (ev.clientX - startX)));
+    columnWidthStore.setWidth(col.id, newWidth);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function toggleFilterPopover(col, thEl) {
+  const existing = document.querySelector('.col-filter-popover');
+  if (existing) existing.remove();
+  if (openFilterColumnId === col.id) {
+    openFilterColumnId = null;
+    return;
+  }
+  openFilterColumnId = col.id;
+
+  const distinctValues = Array.from(new Set(devicesStore.devices.map(d => displayValueForFilter(col.value(d)))))
+    .sort((a, b) => a.localeCompare(b, 'it'));
+  const currentFilter = columnFilters[col.id];
+
+  const popover = document.createElement('div');
+  popover.className = 'col-filter-popover';
+  popover.innerHTML = `
+    <div class="col-filter-list">
+      ${distinctValues.map(v => `
+        <label class="col-filter-item">
+          <input type="checkbox" value="${escapeHtml(v)}" ${(!currentFilter || currentFilter.has(v)) ? 'checked' : ''}>
+          ${escapeHtml(v)}
+        </label>
+      `).join('')}
+    </div>
+    <div class="col-filter-actions">
+      <button type="button" class="btn edit" data-action="clear">Nessun filtro</button>
+      <button type="button" class="btn btn-primary-add" data-action="apply">Applica</button>
+    </div>
+  `;
+  popover.addEventListener('click', e => e.stopPropagation());
+  popover.addEventListener('mousedown', e => e.stopPropagation());
+  popover.querySelector('[data-action="clear"]').addEventListener('click', () => {
+    delete columnFilters[col.id];
+    openFilterColumnId = null;
+    popover.remove();
+    renderDevicesHeader();
+    renderDevicesTable();
+  });
+  popover.querySelector('[data-action="apply"]').addEventListener('click', () => {
+    const checked = Array.from(popover.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+    if (checked.length === distinctValues.length) {
+      delete columnFilters[col.id];
+    } else {
+      columnFilters[col.id] = new Set(checked);
+    }
+    openFilterColumnId = null;
+    popover.remove();
+    renderDevicesHeader();
+    renderDevicesTable();
+  });
+
+  thEl.appendChild(popover);
+}
+
+document.addEventListener('click', () => {
+  const existing = document.querySelector('.col-filter-popover');
+  if (existing) {
+    existing.remove();
+    openFilterColumnId = null;
+  }
+});
 
 function populateSelect(selectEl, options, includeBlank) {
   selectEl.innerHTML = '';
@@ -36,36 +248,44 @@ function renderDevicesTable() {
   const tbody = devicesTableBodyEl();
   const searchTerm = (document.getElementById('devicesSearch').value || '').toLowerCase();
 
-  const filtered = devicesStore.devices.filter(d => {
-    if (!searchTerm) return true;
-    const hostName = computeHostName(d.devCategory, d.devZone, d.devType, d.devId);
-    const ip = (d.connections || []).map(c => c.ip).join(' ');
-    const haystack = `${d.nickname} ${d.marca} ${d.modello} ${hostName} ${ip}`.toLowerCase();
-    return haystack.includes(searchTerm);
+  let filtered = devicesStore.devices.filter(d => {
+    for (const col of DEVICES_COLUMNS) {
+      const filterSet = columnFilters[col.id];
+      if (!filterSet) continue;
+      if (!filterSet.has(displayValueForFilter(col.value(d)))) return false;
+    }
+    return true;
   });
+
+  if (searchTerm) {
+    filtered = filtered.filter(d => {
+      const haystack = DEVICES_COLUMNS
+        .map(col => { const v = col.value(d); return typeof v === 'boolean' ? '' : v; })
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(searchTerm);
+    });
+  }
+
+  const sortCol = DEVICES_COLUMNS.find(c => c.id === sortColumnId);
+  if (sortCol) {
+    filtered = filtered.slice().sort((a, b) => {
+      const cmp = compareValues(sortCol.value(a), sortCol.value(b));
+      return sortDirection === 'asc' ? cmp : -cmp;
+    });
+  }
 
   tbody.innerHTML = '';
   devicesEmptyMessageEl().style.display = devicesStore.devices.length === 0 ? 'block' : 'none';
 
   filtered.forEach(device => {
-    const hostName = computeHostName(device.devCategory, device.devZone, device.devType, device.devId);
-    const ip = (device.connections || []).map(c => c.ip).filter(Boolean).join(', ');
-
     const tr = document.createElement('tr');
+    const cellsHtml = DEVICES_COLUMNS.map(col => {
+      const cls = col.sticky ? ' class="sticky-col"' : '';
+      return `<td${cls}>${col.render(device)}</td>`;
+    }).join('');
     tr.innerHTML = `
-      <td class="sticky-col">${device.nickname || ''}</td>
-      <td>${device.marca || ''}</td>
-      <td>${device.modello || ''}</td>
-      <td>${device.avanzamento || ''}</td>
-      <td>${device.devCategory || ''}</td>
-      <td>${device.devZone || ''}</td>
-      <td>${device.devType || ''}</td>
-      <td>${hostName}</td>
-      <td>${ip}</td>
-      <td>${boolBadge(device.integratoHomeKit)}</td>
-      <td>${boolBadge(device.usatoAutomazioni)}</td>
-      <td>${boolBadge(device.disponibileOra)}</td>
-      <td>${device.note || ''}</td>
+      ${cellsHtml}
       <td class="sticky-actions">
         <div class="actions">
           <button class="btn edit" title="Modifica" data-action="edit" data-id="${device.id}">✏️</button>
@@ -231,6 +451,8 @@ async function deleteDevice(id) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  renderDevicesHeader();
+
   populateSelect(document.getElementById('devCategory'), DEV_CATEGORIES.map(c => c.label), true);
   populateSelect(document.getElementById('devZone'), DEV_ZONES.map(z => z.label), true);
   populateSelect(document.getElementById('devType'), DEV_TYPES.map(t => t.label), true);

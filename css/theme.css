@@ -223,6 +223,7 @@ h1 {
   width: 100%;
   border-collapse: collapse;
   white-space: nowrap;
+  table-layout: fixed;
 }
 
 .compact-table th, .compact-table td {
@@ -230,6 +231,8 @@ h1 {
   border-bottom: 1px solid var(--border-color);
   font-size: 13px;
   text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .compact-table th {
@@ -237,6 +240,7 @@ h1 {
   font-weight: 600;
   color: var(--table-header-text);
   user-select: none;
+  position: relative;
 }
 
 .compact-table tbody tr:hover {
@@ -499,4 +503,101 @@ dialog {
   font-size: 10px;
   color: var(--text-secondary);
   line-height: 1.2;
+}
+
+/* =========================================================
+   TABELLA Devices — colonne ordinabili, filtrabili, ridimensionabili
+   (pattern AnagrafePersoneView/ColumnWidthStore di Incarichi/Oratori)
+   ========================================================= */
+.sortable-th {
+  cursor: pointer;
+  padding-right: 30px !important;
+}
+
+.th-label {
+  cursor: pointer;
+}
+
+.sort-arrow {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.col-filter-btn {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 10px;
+  color: var(--text-secondary);
+  padding: 2px;
+}
+
+.col-filter-btn.active {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.col-resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+}
+
+.col-resize-handle:hover {
+  background-color: var(--primary);
+  opacity: 0.4;
+}
+
+.col-filter-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 50;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  padding: 8px;
+  min-width: 160px;
+  max-height: 260px;
+  overflow-y: auto;
+  white-space: normal;
+  font-weight: normal;
+  text-transform: none;
+  cursor: default;
+}
+
+.col-filter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.col-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: normal;
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.col-filter-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.col-filter-actions .btn {
+  font-size: 11px;
+  padding: 4px 8px;
 }

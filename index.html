@@ -4,22 +4,23 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Home</title>
-  <link rel="stylesheet" href="./css/theme.css?v=6">
+  <link rel="stylesheet" href="./css/theme.css?v=7">
   <script src="./js/vendor/msal-browser.min.js"></script>
-  <script src="./js/storage/StorageProvider.js?v=6" defer></script>
-  <script src="./js/storage/OneDriveProvider.js?v=6" defer></script>
-  <script src="./js/storage/config.js?v=6" defer></script>
-  <script src="./js/app-storage.js?v=6" defer></script>
-  <script src="./js/devices/lookups.js?v=6" defer></script>
-  <script src="./js/devices/hostname.js?v=6" defer></script>
-  <script src="./js/devices/DevicesStore.js?v=6" defer></script>
-  <script src="./js/devices/devices-ui.js?v=6" defer></script>
-  <script src="./js/config/ConfigStore.js?v=6" defer></script>
-  <script src="./js/config/color-components.js?v=6" defer></script>
-  <script src="./js/config/ColorStore.js?v=6" defer></script>
-  <script src="./js/config/colori-ui.js?v=6" defer></script>
-  <script src="./js/config/backup-ui.js?v=6" defer></script>
-  <script src="./js/app.js?v=6" defer></script>
+  <script src="./js/storage/StorageProvider.js?v=7" defer></script>
+  <script src="./js/storage/OneDriveProvider.js?v=7" defer></script>
+  <script src="./js/storage/config.js?v=7" defer></script>
+  <script src="./js/app-storage.js?v=7" defer></script>
+  <script src="./js/devices/lookups.js?v=7" defer></script>
+  <script src="./js/devices/hostname.js?v=7" defer></script>
+  <script src="./js/devices/DevicesStore.js?v=7" defer></script>
+  <script src="./js/devices/ColumnWidthStore.js?v=7" defer></script>
+  <script src="./js/devices/devices-ui.js?v=7" defer></script>
+  <script src="./js/config/ConfigStore.js?v=7" defer></script>
+  <script src="./js/config/color-components.js?v=7" defer></script>
+  <script src="./js/config/ColorStore.js?v=7" defer></script>
+  <script src="./js/config/colori-ui.js?v=7" defer></script>
+  <script src="./js/config/backup-ui.js?v=7" defer></script>
+  <script src="./js/app.js?v=7" defer></script>
 
   <!-- NOTA PER LO SVILUPPO: incrementare il numero "v" sopra ad ogni pubblicazione che
        modifica un file .js/.css locale, per evitare che i browser (specialmente Safari
@@ -61,23 +62,9 @@
 
           <div class="table-responsive">
             <table id="devicesTable" class="compact-table">
+              <colgroup id="devicesColgroup"></colgroup>
               <thead>
-                <tr>
-                  <th class="sticky-col">Nickname</th>
-                  <th>Marca</th>
-                  <th>Modello</th>
-                  <th>Avanzamento</th>
-                  <th>Categoria</th>
-                  <th>Zona</th>
-                  <th>Tipo</th>
-                  <th>Host Name</th>
-                  <th>IP</th>
-                  <th>HomeKit</th>
-                  <th>Automazioni</th>
-                  <th>Disponibile</th>
-                  <th>Note</th>
-                  <th class="sticky-actions">Azioni</th>
-                </tr>
+                <tr id="devicesHeaderRow"></tr>
               </thead>
               <tbody id="devicesTableBody"></tbody>
             </table>
