@@ -36,7 +36,10 @@ class OneDriveProvider extends StorageProvider {
       return;
     }
 
-    const result = await this._msalApp.loginPopup({ scopes: this._scopes });
+    // prompt: 'select_account' forza sempre la schermata di scelta account — senza,
+    // Microsoft può riutilizzare silenziosamente una sessione di login già attiva nel
+    // browser (diversa dalla cache di MSAL), impedendo di scegliere un account diverso.
+    const result = await this._msalApp.loginPopup({ scopes: this._scopes, prompt: 'select_account' });
     this._account = result.account;
   }
 
