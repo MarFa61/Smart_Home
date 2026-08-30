@@ -510,34 +510,46 @@ dialog {
    (pattern AnagrafePersoneView/ColumnWidthStore di Incarichi/Oratori)
    ========================================================= */
 .sortable-th {
-  cursor: pointer;
-  padding-right: 30px !important;
+  overflow: visible; /* il resize handle e il popover filtro non devono essere tagliati */
+  padding-right: 12px !important;
+}
+
+.th-content {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
 }
 
 .th-label {
   cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0; /* permette al testo di restringersi/troncarsi invece di spingere fuori il resto */
 }
 
 .sort-arrow {
   font-weight: 700;
   color: var(--primary);
+  flex-shrink: 0;
 }
 
 .col-filter-btn {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
+  flex-shrink: 0;
   background: none;
-  border: none;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
   cursor: pointer;
-  font-size: 10px;
+  font-size: 11px;
+  line-height: 1;
   color: var(--text-secondary);
-  padding: 2px;
+  padding: 2px 4px;
 }
 
 .col-filter-btn.active {
   color: var(--primary);
+  border-color: var(--primary);
   font-weight: 700;
 }
 

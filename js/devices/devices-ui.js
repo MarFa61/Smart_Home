@@ -88,6 +88,11 @@ function renderDevicesHeader() {
     th.classList.add('sortable-th');
     if (col.sticky) th.classList.add('sticky-col');
 
+    // Contenuto in flusso normale (non position:absolute): più robusto su colonne strette,
+    // dove un elemento assoluto rischiava di finire fuori dall'area visibile della cella.
+    const content = document.createElement('div');
+    content.className = 'th-content';
+
     const label = document.createElement('span');
     label.className = 'th-label';
     label.textContent = col.title;
@@ -101,13 +106,13 @@ function renderDevicesHeader() {
       renderDevicesHeader();
       renderDevicesTable();
     });
-    th.appendChild(label);
+    content.appendChild(label);
 
     if (sortColumnId === col.id) {
       const arrow = document.createElement('span');
       arrow.className = 'sort-arrow';
-      arrow.textContent = sortDirection === 'asc' ? ' ↑' : ' ↓';
-      th.appendChild(arrow);
+      arrow.textContent = sortDirection === 'asc' ? '↑' : '↓';
+      content.appendChild(arrow);
     }
 
     if (col.filterable) {
@@ -120,8 +125,10 @@ function renderDevicesHeader() {
         e.stopPropagation();
         toggleFilterPopover(col, th);
       });
-      th.appendChild(filterBtn);
+      content.appendChild(filterBtn);
     }
+
+    th.appendChild(content);
 
     const resizeHandle = document.createElement('div');
     resizeHandle.className = 'col-resize-handle';
