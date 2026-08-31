@@ -24,6 +24,9 @@ function escapeHtml(str) {
    colonne descrittive lunghe come Modello/Host Name/Note
    solo sortabili, non filtrabili).
    ========================================================= */
+// Stesso ordine e stessa copertura del foglio "Dispositivi Smart" dell'Excel di
+// partenza (colonna per colonna), tranne Criticità e Priorità intervento — rimandate
+// di proposito nell'analisi iniziale (dati non ancora assestati/valorizzati).
 const DEVICES_COLUMNS = [
   { id: 'nickname', title: 'Nickname', sticky: true, filterable: false, defaultWidth: 170,
     value: d => d.nickname || '', render: d => escapeHtml(d.nickname || '') },
@@ -33,12 +36,32 @@ const DEVICES_COLUMNS = [
     value: d => d.modello || '', render: d => escapeHtml(d.modello || '') },
   { id: 'avanzamento', title: 'Avanzamento', filterable: true, defaultWidth: 130,
     value: d => d.avanzamento || '', render: d => escapeHtml(d.avanzamento || '') },
+  { id: 'tipoDispositivo', title: 'Tipo dispositivo', filterable: false, defaultWidth: 140,
+    value: d => d.tipoDispositivo || '', render: d => escapeHtml(d.tipoDispositivo || '') },
+  { id: 'protocollo', title: 'Protocollo', filterable: true, defaultWidth: 130,
+    value: d => d.protocollo || '', render: d => escapeHtml(d.protocollo || '') },
+  { id: 'phisicalHub', title: 'Phisical Hub', filterable: true, defaultWidth: 140,
+    value: d => d.phisicalHub || '', render: d => escapeHtml(d.phisicalHub || '') },
+  { id: 'managingApp', title: 'Managing App', filterable: false, defaultWidth: 130,
+    value: d => d.managingApp || '', render: d => escapeHtml(d.managingApp || '') },
+  { id: 'homey', title: 'Collegato a Homey', filterable: true, defaultWidth: 100,
+    value: d => !!d.collegatoHomey, render: d => boolBadge(d.collegatoHomey) },
+  { id: 'ssid', title: 'SSID', filterable: false, defaultWidth: 120,
+    value: d => d.ssid || '', render: d => escapeHtml(d.ssid || '') },
+  { id: 'connectedTo', title: 'Connected to', filterable: true, defaultWidth: 100,
+    value: d => d.connectedTo || '', render: d => escapeHtml(d.connectedTo || '') },
+  { id: 'connectionSpeed', title: 'Connection Speed', filterable: true, defaultWidth: 110,
+    value: d => d.connectionSpeed || '', render: d => escapeHtml(d.connectionSpeed || '') },
+  { id: 'devGroup', title: 'Dev. Group', filterable: true, defaultWidth: 110,
+    value: d => d.devGroup || '', render: d => escapeHtml(d.devGroup || '') },
   { id: 'devCategory', title: 'Categoria', filterable: true, defaultWidth: 100,
     value: d => d.devCategory || '', render: d => escapeHtml(d.devCategory || '') },
   { id: 'devZone', title: 'Zona', filterable: true, defaultWidth: 100,
     value: d => d.devZone || '', render: d => escapeHtml(d.devZone || '') },
   { id: 'devType', title: 'Tipo', filterable: true, defaultWidth: 90,
     value: d => d.devType || '', render: d => escapeHtml(d.devType || '') },
+  { id: 'devId', title: 'Dev. Id.', filterable: false, defaultWidth: 90,
+    value: d => d.devId || '', render: d => escapeHtml(d.devId || '') },
   { id: 'hostName', title: 'Host Name', filterable: false, defaultWidth: 210,
     value: d => computeHostName(d.devCategory, d.devZone, d.devType, d.devId),
     render: d => escapeHtml(computeHostName(d.devCategory, d.devZone, d.devType, d.devId)) },
@@ -87,6 +110,16 @@ function renderDevicesHeader() {
     const th = document.createElement('th');
     th.classList.add('sortable-th');
     if (col.sticky) th.classList.add('sticky-col');
+    // Divisore come box-shadow inset, non border-right: su una cella position:sticky
+    // Safari dipinge lo sfondo SOPRA il proprio bordo (bug noto e documentato di
+    // WebKit, diverso dal comportamento di Chrome), rendendo un border-right visibile
+    // solo a tratti a seconda dell'arrotondamento sub-pixel dello zoom. Un box-shadow
+    // non ha questo problema — è la stessa tecnica già in uso per l'ombra di scroll
+    // della colonna Nickname (.sticky-col), qui riprodotta per poterla combinare.
+    const dividerColor = colorStore.hex('dividerIntestazioneTabella', 'chiaro', 'primoPiano');
+    th.style.boxShadow = col.sticky
+      ? `2px 0 5px rgba(0,0,0,0.05), inset -1px 0 0 ${dividerColor}`
+      : `inset -1px 0 0 ${dividerColor}`;
 
     // Contenuto in flusso normale (non position:absolute): più robusto su colonne strette,
     // dove un elemento assoluto rischiava di finire fuori dall'area visibile della cella.
@@ -119,8 +152,9 @@ function renderDevicesHeader() {
       const filterBtn = document.createElement('button');
       filterBtn.type = 'button';
       filterBtn.className = 'col-filter-btn' + (columnFilters[col.id] ? ' active' : '');
-      // SVG invece di un carattere Unicode (es. ▾): indipendente dal supporto font del sistema.
-      filterBtn.innerHTML = '<svg width="8" height="8" viewBox="0 0 10 10"><path d="M1 3 L5 7 L9 3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      // Icona a imbuto (SVG, non carattere Unicode: indipendente dal supporto font del
+      // sistema), più riconoscibile e visibile della precedente freccina sottile.
+      filterBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 14 14"><polygon points="12.5 2 1.5 2 6 7.5 6 11.5 8 12.5 8 7.5 12.5 2" fill="currentColor"/></svg>';
       filterBtn.title = 'Filtra questa colonna';
       filterBtn.addEventListener('click', e => {
         e.stopPropagation();
@@ -186,6 +220,11 @@ function toggleFilterPopover(col, thEl) {
   const popover = document.createElement('div');
   popover.className = 'col-filter-popover';
   popover.innerHTML = `
+    <div class="col-filter-actions">
+      <button type="button" class="btn edit" data-action="deselect-all">Deseleziona tutto</button>
+      <button type="button" class="btn edit" data-action="clear">Nessun filtro</button>
+      <button type="button" class="btn btn-primary-add" data-action="apply">Applica</button>
+    </div>
     <div class="col-filter-list">
       ${distinctValues.map(v => `
         <label class="col-filter-item">
@@ -194,13 +233,12 @@ function toggleFilterPopover(col, thEl) {
         </label>
       `).join('')}
     </div>
-    <div class="col-filter-actions">
-      <button type="button" class="btn edit" data-action="clear">Nessun filtro</button>
-      <button type="button" class="btn btn-primary-add" data-action="apply">Applica</button>
-    </div>
   `;
   popover.addEventListener('click', e => e.stopPropagation());
   popover.addEventListener('mousedown', e => e.stopPropagation());
+  popover.querySelector('[data-action="deselect-all"]').addEventListener('click', () => {
+    popover.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+  });
   popover.querySelector('[data-action="clear"]').addEventListener('click', () => {
     delete columnFilters[col.id];
     openFilterColumnId = null;
@@ -322,19 +360,109 @@ function updateHostNamePreview() {
   );
 }
 
+// IP disponibili per il Dev. Group del dispositivo in modifica: dal blocco riservato
+// a quel gruppo (DEV_GROUP_IP_RANGES), esclusi gli IP già usati da ALTRI dispositivi.
+// Nessun blocco per il gruppo (Dinamico/TBD/n/a/vuoto) → nessun suggerimento, resta
+// testo libero.
+function availableIpsForEditingDevice() {
+  const range = DEV_GROUP_IP_RANGES[editingDevice.devGroup];
+  if (!range) return [];
+  const usedByOthers = new Set();
+  devicesStore.devices.forEach(d => {
+    if (d.id === editingDevice.id) return;
+    (d.connections || []).forEach(c => { if (c.ip) usedByOthers.add(c.ip); });
+  });
+  return expandIpRange(range).filter(ip => !usedByOthers.has(ip));
+}
+
+// Popover suggerimenti IP fatto a mano invece di <datalist>: il supporto di
+// <datalist> su input di testo è incompleto/inaffidabile in Safari (spesso non
+// mostra alcun menu). Usa l'API Popover nativa (attributo popover="auto"), non un
+// div appeso a <body> come il popover filtro colonne: il dialog Device è un
+// <dialog> aperto con showModal(), che vive nel "top layer" del browser sopra tutta
+// la pagina — un div normale in <body> finirebbe sempre nascosto dietro di esso,
+// indipendentemente da z-index. Un popover con l'attributo nativo si apre invece
+// anch'esso nel top layer, sopra il dialog, e si chiude da solo al click fuori.
+function closeIpSuggestPopover() {
+  const existing = document.querySelector('.ip-suggest-popover');
+  if (existing) existing.remove();
+}
+
+function showIpSuggestPopover(inputEl, allIps) {
+  closeIpSuggestPopover();
+  const typed = inputEl.value.trim().toLowerCase();
+  const matches = typed ? allIps.filter(ip => ip.toLowerCase().includes(typed)) : allIps;
+
+  const popover = document.createElement('div');
+  popover.className = 'ip-suggest-popover';
+  popover.setAttribute('popover', 'auto');
+  popover.innerHTML = matches.length
+    ? matches.map(ip => `<div class="ip-suggest-item" data-ip="${ip}">${ip}</div>`).join('')
+    : '<div class="ip-suggest-empty">Nessun IP libero nel blocco riservato</div>';
+  popover.addEventListener('mousedown', e => {
+    e.preventDefault(); // impedisce il blur dell'input prima del click sull'item
+    const item = e.target.closest('.ip-suggest-item');
+    if (!item) return;
+    inputEl.value = item.dataset.ip;
+    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    closeIpSuggestPopover();
+  });
+
+  document.body.appendChild(popover);
+  const rect = inputEl.getBoundingClientRect();
+  popover.style.top = `${rect.bottom + 2}px`;
+  popover.style.left = `${rect.left}px`;
+  popover.style.width = `${rect.width}px`;
+  popover.showPopover();
+}
+
+// Avviso quando manca il prerequisito per i suggerimenti IP: Dev. Group non ancora
+// scelto per niente (diverso da Dinamico/TBD/n/a, che semplicemente non hanno un
+// blocco riservato — caso normale, nessun avviso). Reso esplicito qui invece di
+// lasciare che il campo IP torni silenziosamente testo libero senza spiegazioni.
+function updateIpGroupHint() {
+  const hint = document.getElementById('devIpGroupHint');
+  if (!editingDevice.devGroup) {
+    hint.textContent = 'Imposta il Dev. Group (tab "Configurazione & Gruppi") per avere suggerimenti di IP liberi nel blocco riservato.';
+    hint.style.display = 'block';
+  } else {
+    hint.style.display = 'none';
+  }
+}
+
 function renderConnectionsList() {
+  updateIpGroupHint();
   const container = document.getElementById('devConnectionsList');
   container.innerHTML = '';
+  const availableIps = availableIpsForEditingDevice();
+  const ipPlaceholder = editingDevice.devGroup ? 'Indirizzo IP' : 'Indirizzo IP (imposta Dev. Group per i suggerimenti)';
+  // Freccina come nelle tendine native, solo quando ci sono davvero suggerimenti da
+  // mostrare: segnala che il campo si può scegliere da un elenco, non solo digitare.
+  const arrowSvg = '<svg class="conn-ip-arrow" width="8" height="8" viewBox="0 0 10 10"><path d="M1 3 L5 7 L9 3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   editingDevice.connections.forEach((conn, index) => {
     const row = document.createElement('div');
     row.className = 'connection-row';
     row.innerHTML = `
-      <input type="text" placeholder="Indirizzo IP" class="conn-ip" value="${conn.ip || ''}">
-      <input type="text" placeholder="Nota (es. Wi-Fi / Ethernet)" class="conn-note" value="${conn.note || ''}">
+      <div class="conn-ip-wrap${availableIps.length ? ' has-suggestions' : ''}">
+        <input type="text" placeholder="${ipPlaceholder}" class="conn-ip" value="${escapeHtml(conn.ip || '')}" autocomplete="off">
+        ${availableIps.length ? arrowSvg : ''}
+      </div>
+      <input type="text" placeholder="Nota (es. Wi-Fi / Ethernet)" class="conn-note" value="${escapeHtml(conn.note || '')}">
       <button type="button" class="btn pow conn-remove" ${editingDevice.connections.length <= 1 ? 'disabled' : ''}>🗑️</button>
     `;
-    row.querySelector('.conn-ip').addEventListener('input', e => { conn.ip = e.target.value; });
+    const ipInput = row.querySelector('.conn-ip');
+    ipInput.addEventListener('input', e => {
+      conn.ip = e.target.value;
+      if (availableIps.length) showIpSuggestPopover(ipInput, availableIps);
+    });
+    if (availableIps.length) {
+      // Sia focus (es. arrivo con Tab) sia click (anche a campo già attivo, dato che
+      // un click sul campo mentre il popover è aperto lo chiude da solo: è un
+      // popover "auto", si autochiude sui click fuori da sé — l'input è fuori).
+      ipInput.addEventListener('focus', () => showIpSuggestPopover(ipInput, availableIps));
+      ipInput.addEventListener('click', () => showIpSuggestPopover(ipInput, availableIps));
+    }
     row.querySelector('.conn-note').addEventListener('input', e => { conn.note = e.target.value; });
     row.querySelector('.conn-remove').addEventListener('click', () => {
       editingDevice.connections.splice(index, 1);
@@ -370,8 +498,10 @@ function openDeviceDialog(device) {
 
   document.getElementById('devSSID').value = editingDevice.ssid;
   document.getElementById('devConnSpeed').value = editingDevice.connectionSpeed;
+  document.getElementById('devConnectedTo').value = editingDevice.connectedTo;
   renderConnectionsList();
 
+  document.getElementById('devGroup').value = editingDevice.devGroup;
   document.getElementById('devCategory').value = editingDevice.devCategory;
   document.getElementById('devZone').value = editingDevice.devZone;
   document.getElementById('devType').value = editingDevice.devType;
@@ -403,8 +533,10 @@ function collectFormIntoEditingDevice() {
 
   editingDevice.ssid = document.getElementById('devSSID').value.trim();
   editingDevice.connectionSpeed = document.getElementById('devConnSpeed').value.trim();
+  editingDevice.connectedTo = document.getElementById('devConnectedTo').value;
   // editingDevice.connections è già aggiornato in tempo reale da renderConnectionsList()
 
+  editingDevice.devGroup = document.getElementById('devGroup').value;
   editingDevice.devCategory = document.getElementById('devCategory').value;
   editingDevice.devZone = document.getElementById('devZone').value;
   editingDevice.devType = document.getElementById('devType').value;
@@ -465,17 +597,37 @@ async function deleteDevice(id) {
   }
 }
 
+// Tendine alimentate da Tabelle (tablesStore): richiamata anche dopo un salvataggio
+// in Tabelle, per riflettere subito le modifiche senza dover ricaricare la pagina.
+function populateDeviceFormSelects() {
+  populateSelect(document.getElementById('devCategory'), tablesStore.labels('devCategory'), true);
+  populateSelect(document.getElementById('devZone'), tablesStore.labels('devZone'), true);
+  populateSelect(document.getElementById('devType'), tablesStore.labels('devType'), true);
+  populateSelect(document.getElementById('devAvanzamento'), tablesStore.labels('avanzamento'), false);
+  populateSelect(document.getElementById('devTipoDispositivo'), tablesStore.labels('tipoDispositivo'), true);
+  populateSelect(document.getElementById('devProtocollo'), tablesStore.labels('protocollo'), true);
+  populateSelect(document.getElementById('devPhisicalHub'), tablesStore.labels('phisicalHub'), true);
+  populateSelect(document.getElementById('devManagingApp'), tablesStore.labels('managingApp'), true);
+  populateSelect(document.getElementById('devSSID'), tablesStore.labels('ssid'), true);
+  populateSelect(document.getElementById('devGroup'), DEV_GROUPS, true);
+  populateSelect(document.getElementById('devConnectedTo'), DEV_CONNECTED_TO, true);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   renderDevicesHeader();
+  setConnStatusIcon(devicesStatusEl(), false, 'Non connesso a OneDrive.');
 
-  populateSelect(document.getElementById('devCategory'), DEV_CATEGORIES.map(c => c.label), true);
-  populateSelect(document.getElementById('devZone'), DEV_ZONES.map(z => z.label), true);
-  populateSelect(document.getElementById('devType'), DEV_TYPES.map(t => t.label), true);
-  populateSelect(document.getElementById('devAvanzamento'), DEV_AVANZAMENTO, false);
+  populateDeviceFormSelects();
 
   ['devCategory', 'devZone', 'devType', 'devId'].forEach(id => {
     document.getElementById(id).addEventListener('input', updateHostNamePreview);
     document.getElementById(id).addEventListener('change', updateHostNamePreview);
+  });
+
+  // Il blocco IP suggerito dipende dal Dev. Group: cambiandolo si aggiorna la lista.
+  document.getElementById('devGroup').addEventListener('change', () => {
+    editingDevice.devGroup = document.getElementById('devGroup').value;
+    renderConnectionsList();
   });
 
   document.querySelectorAll('#deviceDlg .tab-btn').forEach(btn => {
@@ -524,7 +676,7 @@ document.addEventListener('DOMContentLoaded', () => {
     await appStorage.disconnect();
     devicesStore.devices = [];
     renderDevicesTable();
-    devicesStatusEl().textContent = 'Non connesso a OneDrive.';
+    setConnStatusIcon(devicesStatusEl(), false, 'Non connesso a OneDrive.');
     document.getElementById('btnDevicesConnect').style.display = 'inline-block';
     document.getElementById('btnDevicesDisconnect').style.display = 'none';
     document.getElementById('btnDeviceNew').style.display = 'none';
@@ -538,7 +690,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function loadAndShowDevices() {
-  devicesStatusEl().textContent = `Connesso a OneDrive (${appStorage.connectedAccountEmail()}).`;
+  setConnStatusIcon(devicesStatusEl(), true, `Connesso a OneDrive (${appStorage.connectedAccountEmail()}).`);
   document.getElementById('btnDevicesConnect').style.display = 'none';
   document.getElementById('btnDevicesDisconnect').style.display = 'inline-block';
   document.getElementById('btnDeviceNew').style.display = 'inline-block';

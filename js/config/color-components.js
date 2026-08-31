@@ -105,6 +105,53 @@ const COLOR_COMPONENTS = [
     defaultChiaro: { primoPiano: '#e0e0e0' },
     defaultScuro: { primoPiano: '#3a3a3c' },
   },
+  {
+    id: 'iconaOrdinamentoFiltroAttiva',
+    categoria: 'Finestra e tabella',
+    // Il colore "a riposo" non è un componente a parte: icona filtro e freccia di
+    // ordinamento usano direttamente --table-header-text (stesso colore del testo delle
+    // label di colonna, non solo uguale per default), già configurabile sopra come
+    // "Testo intestazione tabella".
+    nome: 'Icona ordinamento/filtro colonna (attiva)',
+    descrizione: 'Colore dell\'icona di filtro quando il filtro è applicato, e della freccia quando la colonna è quella ordinata.',
+    slots: ['primoPiano'],
+    cssVar: { primoPiano: '--table-icon-active-color' },
+    // Blu (stesso di --primary): un giallo/arancio, per quanto "intenso", rischia di
+    // confondersi con uno sfondo intestazione personalizzato su toni caldi (successo
+    // reale: sfondo intestazione arancione + questa icona in giallo-oro = invisibile).
+    defaultChiaro: { primoPiano: '#0066cc' },
+    defaultScuro: { primoPiano: '#4d94ff' },
+  },
+  {
+    id: 'dividerIntestazioneTabella',
+    categoria: 'Finestra e tabella',
+    nome: 'Divider intestazione tabella',
+    descrizione: 'Linea verticale sottile che separa una colonna dalla successiva, solo nella riga di intestazione della tabella Devices.',
+    slots: ['primoPiano'],
+    cssVar: { primoPiano: '--table-header-divider-color' },
+    defaultChiaro: { primoPiano: '#b0b0b0' },
+    defaultScuro: { primoPiano: '#6b6b6f' },
+  },
+  {
+    id: 'barraRicerca',
+    categoria: 'Finestra e tabella',
+    nome: 'Barra di ricerca',
+    descrizione: 'Sfondo e testo del campo di ricerca nella testata di Devices.',
+    slots: ['sfondo', 'primoPiano'],
+    cssVar: { sfondo: '--search-bg', primoPiano: '--search-text' },
+    defaultChiaro: { sfondo: '#ffffff', primoPiano: '#333333' },
+    defaultScuro: { sfondo: '#2c2c2e', primoPiano: '#f2f2f7' },
+  },
+  {
+    id: 'pulsanteNuovoDevice',
+    categoria: 'Finestra e tabella',
+    nome: 'Pulsante "Nuovo Device"',
+    descrizione: 'Sfondo e testo del pulsante per aggiungere un dispositivo, nella testata di Devices.',
+    slots: ['sfondo', 'primoPiano'],
+    cssVar: { sfondo: '--add-device-btn-bg', primoPiano: '--add-device-btn-text' },
+    defaultChiaro: { sfondo: '#0066cc', primoPiano: '#ffffff' },
+    defaultScuro: { sfondo: '#0066cc', primoPiano: '#ffffff' },
+  },
 ];
 
 function colorComponentById(id) {

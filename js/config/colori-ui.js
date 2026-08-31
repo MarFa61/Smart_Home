@@ -1,8 +1,15 @@
 /* =========================================================
-   UI "Colori" — pattern "insiemi finiti" di Incarichi/Oratori:
-   ogni scena è un contesto visivo reale (non isolato), mostrato
-   due volte (Chiaro poi Scuro, impilate), con sotto la griglia
-   degli swatch dei componenti coinvolti.
+   UI "Config" — intestazione unica con stato connessione (icona
+   + Connetti/Disconnetti, stesso pattern di Devices) condivisa
+   dai due tab Backup & Restore e Colori: prima Colori aveva un
+   proprio pulsante di connessione, mentre Backup & Restore non
+   ne aveva uno proprio e contava implicitamente sui dati già
+   caricati altrove (es. da Devices).
+
+   Colori — pattern "insiemi finiti" di Incarichi/Oratori: ogni
+   scena è un contesto visivo reale (non isolato), mostrato due
+   volte (Chiaro poi Scuro, impilate), con sotto la griglia degli
+   swatch dei componenti coinvolti.
 
    Prima scena: "Finestra e tabella". Il tema Chiaro, oltre a
    essere modificabile qui, si applica dal vivo a tutta l'app
@@ -16,6 +23,51 @@ const colorStore = new ColorStore(configStore);
 
 const SCENE_FINESTRA_TABELLA = COLOR_COMPONENTS.filter(c => c.categoria === 'Finestra e tabella');
 
+// A differenza di Tabelle, qui ogni swatch scrive subito in configStore (non c'è un
+// "bozza vs salvato" separato): per sapere se ci sono modifiche non salvate si tiene
+// una fotografia degli override al momento dell'ultimo caricamento/salvataggio, da
+// confrontare e a cui eventualmente tornare (scarto = ripristino della fotografia).
+let coloriSavedSnapshot = null;
+
+function snapshotColoriBaseline() {
+  coloriSavedSnapshot = JSON.parse(JSON.stringify(configStore.config.colorOverrides || {}));
+}
+
+function coloriIsDirty() {
+  if (!coloriSavedSnapshot) return false;
+  return JSON.stringify(configStore.config.colorOverrides || {}) !== JSON.stringify(coloriSavedSnapshot);
+}
+
+function discardColoriChanges() {
+  configStore.config.colorOverrides = JSON.parse(JSON.stringify(coloriSavedSnapshot || {}));
+  applyLightThemeToApp();
+  renderColoriScena();
+  document.getElementById('coloriSaveStatus').textContent = '';
+}
+
+function checkColoriUnsavedChanges() {
+  if (!coloriIsDirty()) return null;
+  return { message: 'Ci sono modifiche non salvate in Colori.', save: saveColori, discard: discardColoriChanges };
+}
+
+/** Ritorna true se il salvataggio è andato a buon fine, false altrimenti — usato sia
+ *  dal pulsante Salva sia dal registro modifiche non salvate ("Salva e vai"). */
+async function saveColori() {
+  try {
+    await colorStore.save();
+    snapshotColoriBaseline();
+    document.getElementById('coloriSaveStatus').textContent = 'Salvato.';
+    return true;
+  } catch (error) {
+    if (error.name === 'StorageConflictError') {
+      document.getElementById('coloriSaveStatus').textContent = 'Conflitto: la configurazione è cambiata altrove. Ricarica la pagina.';
+    } else {
+      document.getElementById('coloriSaveStatus').textContent = `Errore: ${error.message}`;
+    }
+    return false;
+  }
+}
+
 function applyLightThemeToApp() {
   SCENE_FINESTRA_TABELLA.forEach(component => {
     component.slots.forEach(slot => {
@@ -24,6 +76,9 @@ function applyLightThemeToApp() {
       document.documentElement.style.setProperty(varName, colorStore.hex(component.id, 'chiaro', slot));
     });
   });
+  // Il divisore di intestazione Devices è colorato inline via JS, non da una CSS
+  // custom property: va quindi ridisegnato esplicitamente quando il tema cambia.
+  renderDevicesHeader();
 }
 
 function previewMarkup(tema) {
@@ -86,53 +141,80 @@ function renderColoriScena() {
   });
 }
 
-async function loadAndShowColori() {
+function switchConfigTab(tabId) {
+  document.querySelectorAll('#section-config .tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.configTab === tabId);
+  });
+  document.querySelectorAll('#section-config .config-tab-content').forEach(content => {
+    content.classList.toggle('active', content.id === tabId);
+  });
+}
+
+async function loadAndShowConfig() {
   await configStore.load();
+  snapshotColoriBaseline();
   applyLightThemeToApp();
   renderColoriScena();
-  document.getElementById('coloriConnStatus').textContent = `Connesso a OneDrive (${appStorage.connectedAccountEmail()}).`;
-  document.getElementById('btnColoriConnect').style.display = 'none';
-  document.getElementById('coloriForm').style.display = 'block';
+  // Backup & Restore lavora su devicesStore: se non è già stato caricato dalla sezione
+  // Devices in questa sessione, lo carica qui (altrimenti un backup fatto da Config,
+  // senza mai passare da Devices, esporterebbe un elenco dispositivi vuoto).
+  if (devicesStore.devices.length === 0) await devicesStore.load();
+
+  setConnStatusIcon(document.getElementById('configConnStatus'), true, `Connesso a OneDrive (${appStorage.connectedAccountEmail()}).`);
+  document.getElementById('btnConfigConnect').style.display = 'none';
+  document.getElementById('btnConfigDisconnect').style.display = 'inline-block';
+  document.getElementById('configConnectPlaceholder').style.display = 'none';
+  document.getElementById('configTabsArea').style.display = 'block';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('btnColoriConnect').addEventListener('click', async () => {
+  registerUnsavedChangesChecker(checkColoriUnsavedChanges);
+  setConnStatusIcon(document.getElementById('configConnStatus'), false, 'Non connesso a OneDrive.');
+
+  document.querySelectorAll('#section-config .tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchConfigTab(btn.dataset.configTab));
+  });
+
+  document.getElementById('btnConfigConnect').addEventListener('click', async () => {
     try {
+      document.getElementById('configConnStatus').textContent = 'Connessione in corso…';
       await appStorage.connect();
-      await loadAndShowColori();
+      await loadAndShowConfig();
     } catch (error) {
-      document.getElementById('coloriConnStatus').textContent = `Errore di connessione: ${error.message}`;
+      document.getElementById('configConnStatus').textContent = `Errore di connessione: ${error.message}`;
     }
   });
 
-  document.getElementById('btnColoriSave').addEventListener('click', async () => {
-    try {
-      await colorStore.save();
-      document.getElementById('coloriSaveStatus').textContent = 'Salvato.';
-    } catch (error) {
-      if (error.name === 'StorageConflictError') {
-        document.getElementById('coloriSaveStatus').textContent = 'Conflitto: la configurazione è cambiata altrove. Ricarica la pagina.';
-      } else {
-        document.getElementById('coloriSaveStatus').textContent = `Errore: ${error.message}`;
-      }
-    }
+  document.getElementById('btnConfigDisconnect').addEventListener('click', async () => {
+    await appStorage.disconnect();
+    setConnStatusIcon(document.getElementById('configConnStatus'), false, 'Non connesso a OneDrive.');
+    document.getElementById('btnConfigConnect').style.display = 'inline-block';
+    document.getElementById('btnConfigDisconnect').style.display = 'none';
+    document.getElementById('configTabsArea').style.display = 'none';
+    document.getElementById('configConnectPlaceholder').style.display = 'block';
   });
 
-  document.getElementById('btnColoriReset').addEventListener('click', async () => {
-    colorStore.resetAll();
-    applyLightThemeToApp();
+  document.getElementById('btnColoriSave').addEventListener('click', saveColori);
+
+  async function resetTemaEShow(tema, label) {
+    colorStore.resetTema(tema);
+    if (tema === 'chiaro') applyLightThemeToApp();
     renderColoriScena();
     try {
       await colorStore.save();
-      document.getElementById('coloriSaveStatus').textContent = 'Ripristinati i colori predefiniti.';
+      snapshotColoriBaseline();
+      document.getElementById('coloriSaveStatus').textContent = `Ripristinati i colori predefiniti (${label}).`;
     } catch (error) {
       document.getElementById('coloriSaveStatus').textContent = `Errore: ${error.message}`;
     }
-  });
+  }
+
+  document.getElementById('btnColoriResetChiaro').addEventListener('click', () => resetTemaEShow('chiaro', 'Chiaro'));
+  document.getElementById('btnColoriResetScuro').addEventListener('click', () => resetTemaEShow('scuro', 'Scuro'));
 
   // Connessione automatica: se una sessione OneDrive era già attiva (anche stabilita
   // da un'altra sezione), si salta il pulsante "Connetti" e si carica direttamente.
   appStorageReady.then(async giaConnesso => {
-    if (giaConnesso || appStorage.isConnected()) await loadAndShowColori();
+    if (giaConnesso || appStorage.isConnected()) await loadAndShowConfig();
   });
 });

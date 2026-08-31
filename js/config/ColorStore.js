@@ -37,6 +37,16 @@ class ColorStore {
     this._configStore.config.colorOverrides = {};
   }
 
+  // Ripristina solo gli override di un tema (es. "chiaro"), lasciando intatti quelli
+  // dell'altro tema — a differenza di resetAll() che li cancella entrambi insieme.
+  resetTema(tema) {
+    const overrides = this._configStore.config.colorOverrides || {};
+    const suffix = `.${tema}.`;
+    Object.keys(overrides).forEach(key => {
+      if (key.includes(suffix)) delete overrides[key];
+    });
+  }
+
   async save() {
     await this._configStore.save();
   }
