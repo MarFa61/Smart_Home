@@ -113,6 +113,28 @@ body {
   display: block;
 }
 
+/* Devices: titolo e testata della tabella restano fissi, scorre solo il corpo
+   della tabella. .table-responsive diventa il contenitore con scroll verticale
+   proprio (invece di .content-area): la testata vi resta "sticky" senza bisogno
+   di calcolare offset, dato che il titolo e la toolbar stanno fuori da quel
+   contenitore e non scorrono affatto. */
+#section-devices.section-view.active {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+#section-devices .win {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+#section-devices .table-responsive {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 .placeholder {
   color: var(--text-secondary);
   font-size: 14px;
@@ -377,7 +399,11 @@ h1 {
   font-weight: 600;
   color: var(--table-header-text);
   user-select: none;
-  position: relative;
+  /* sticky verticale: la testata resta visibile durante lo scroll del corpo
+     tabella (il contenitore con lo scroll è .table-responsive, vedi sopra). */
+  position: sticky;
+  top: 0;
+  z-index: 3;
 }
 
 /* Separatori verticali sottili tra le colonne, solo in testata: impostati come
@@ -399,7 +425,7 @@ h1 {
   box-shadow: 2px 0 5px rgba(0,0,0,0.05);
 }
 .compact-table td.sticky-col { background-color: var(--card-bg); font-weight: 600; }
-.compact-table th.sticky-col { background-color: var(--table-header-bg); z-index: 3; }
+.compact-table th.sticky-col { background-color: var(--table-header-bg); z-index: 4; }
 .compact-table tr:hover td.sticky-col { background-color: var(--row-hover); }
 
 /* Colonna Azioni Sticky (Destra) */
@@ -412,7 +438,7 @@ h1 {
   text-align: center;
 }
 .compact-table td.sticky-actions { background-color: var(--card-bg); }
-.compact-table th.sticky-actions { background-color: var(--table-header-bg); z-index: 3; }
+.compact-table th.sticky-actions { background-color: var(--table-header-bg); z-index: 4; }
 .compact-table tr:hover td.sticky-actions { background-color: var(--row-hover); }
 
 /* Badge di stato */
@@ -568,13 +594,17 @@ dialog::backdrop {
   gap: 8px;
   margin-bottom: 6px;
 }
-.connection-row input {
+.connection-row input,
+.connection-row select {
   padding: 7px 10px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 13px;
 }
 .connection-row .conn-note { flex: 2; }
+/* Righe "Protocolli supportati" (stesso .connection-row, solo tendina + cestino):
+   la tendina prende tutto lo spazio disponibile, come farebbe un campo IP. */
+.connection-row select.protocollo-select { flex: 1; }
 
 /* Contenitore del campo IP con la freccina a destra (solo quando ci sono
    suggerimenti disponibili): stesso indicatore visivo delle tendine native, per

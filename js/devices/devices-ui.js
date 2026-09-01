@@ -39,7 +39,7 @@ const DEVICES_COLUMNS = [
   { id: 'tipoDispositivo', title: 'Tipo dispositivo', filterable: false, defaultWidth: 140,
     value: d => d.tipoDispositivo || '', render: d => escapeHtml(d.tipoDispositivo || '') },
   { id: 'protocollo', title: 'Protocollo', filterable: true, defaultWidth: 130,
-    value: d => d.protocollo || '', render: d => escapeHtml(d.protocollo || '') },
+    value: d => d.protocolloConnessione || '', render: d => escapeHtml(d.protocolloConnessione || '') },
   { id: 'phisicalHub', title: 'Phisical Hub', filterable: true, defaultWidth: 140,
     value: d => d.phisicalHub || '', render: d => escapeHtml(d.phisicalHub || '') },
   { id: 'managingApp', title: 'Managing App', filterable: false, defaultWidth: 130,
@@ -399,8 +399,11 @@ function showIpSuggestPopover(inputEl, allIps) {
   popover.innerHTML = matches.length
     ? matches.map(ip => `<div class="ip-suggest-item" data-ip="${ip}">${ip}</div>`).join('')
     : '<div class="ip-suggest-empty">Nessun IP libero nel blocco riservato</div>';
-  popover.addEventListener('mousedown', e => {
-    e.preventDefault(); // impedisce il blur dell'input prima del click sull'item
+  // pointerdown (non mousedown/click): è il primo evento della sequenza, prima che
+  // il light-dismiss nativo del popover possa nasconderlo e far "cadere" il click
+  // sull'elemento sottostante (es. il pulsante Aggiungi connessione).
+  popover.addEventListener('pointerdown', e => {
+    e.preventDefault();
     const item = e.target.closest('.ip-suggest-item');
     if (!item) return;
     inputEl.value = item.dataset.ip;
@@ -408,7 +411,11 @@ function showIpSuggestPopover(inputEl, allIps) {
     closeIpSuggestPopover();
   });
 
-  document.body.appendChild(popover);
+  // Appeso dentro il <dialog>, non a document.body: il dialog modale rende inerte
+  // (non cliccabile) tutto ciò che sta fuori dal proprio sottoalbero DOM, anche se
+  // il popover, promosso al top layer, ci si disegna visivamente sopra — da fuori i
+  // click "cadevano" sul dialog sottostante invece di raggiungere gli item.
+  document.getElementById('deviceDlg').appendChild(popover);
   const rect = inputEl.getBoundingClientRect();
   popover.style.top = `${rect.bottom + 2}px`;
   popover.style.left = `${rect.left}px`;
@@ -434,22 +441,28 @@ function renderConnectionsList() {
   updateIpGroupHint();
   const container = document.getElementById('devConnectionsList');
   container.innerHTML = '';
+  // Senza Dev. Group non c'è un blocco IP di riferimento: i campi restano bloccati
+  // (non testo libero) e non si possono aggiungere altre connessioni, invece di
+  // lasciare che l'utente componga un IP fuori da qualsiasi blocco riservato.
+  const locked = !editingDevice.devGroup;
   const availableIps = availableIpsForEditingDevice();
-  const ipPlaceholder = editingDevice.devGroup ? 'Indirizzo IP' : 'Indirizzo IP (imposta Dev. Group per i suggerimenti)';
+  const ipPlaceholder = locked ? 'Imposta prima il Dev. Group' : 'Indirizzo IP';
   // Freccina come nelle tendine native, solo quando ci sono davvero suggerimenti da
   // mostrare: segnala che il campo si può scegliere da un elenco, non solo digitare.
   const arrowSvg = '<svg class="conn-ip-arrow" width="8" height="8" viewBox="0 0 10 10"><path d="M1 3 L5 7 L9 3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  document.getElementById('btnAddConnection').style.display = locked ? 'none' : '';
 
   editingDevice.connections.forEach((conn, index) => {
     const row = document.createElement('div');
     row.className = 'connection-row';
     row.innerHTML = `
       <div class="conn-ip-wrap${availableIps.length ? ' has-suggestions' : ''}">
-        <input type="text" placeholder="${ipPlaceholder}" class="conn-ip" value="${escapeHtml(conn.ip || '')}" autocomplete="off">
+        <input type="text" placeholder="${ipPlaceholder}" class="conn-ip" value="${escapeHtml(conn.ip || '')}" autocomplete="off" ${locked ? 'disabled' : ''}>
         ${availableIps.length ? arrowSvg : ''}
       </div>
-      <input type="text" placeholder="Nota (es. Wi-Fi / Ethernet)" class="conn-note" value="${escapeHtml(conn.note || '')}">
-      <button type="button" class="btn pow conn-remove" ${editingDevice.connections.length <= 1 ? 'disabled' : ''}>🗑️</button>
+      <input type="text" placeholder="Nota (es. Wi-Fi / Ethernet)" class="conn-note" value="${escapeHtml(conn.note || '')}" ${locked ? 'disabled' : ''}>
+      <button type="button" class="btn pow conn-remove">🗑️</button>
     `;
     const ipInput = row.querySelector('.conn-ip');
     ipInput.addEventListener('input', e => {
@@ -465,9 +478,58 @@ function renderConnectionsList() {
     }
     row.querySelector('.conn-note').addEventListener('input', e => { conn.note = e.target.value; });
     row.querySelector('.conn-remove').addEventListener('click', () => {
-      editingDevice.connections.splice(index, 1);
+      // Conferma solo se c'è davvero qualcosa da perdere: azione irreversibile,
+      // ma su una riga già vuota non ha senso interrompere l'utente.
+      if ((conn.ip || conn.note) && !confirm('Eliminare questa connessione (IP e Nota)?')) return;
+      // Sull'unica riga rimasta non si può eliminare la riga stessa (ne deve
+      // restare sempre almeno una): il cestino ne svuota invece il contenuto.
+      if (editingDevice.connections.length <= 1) {
+        conn.ip = '';
+        conn.note = '';
+      } else {
+        editingDevice.connections.splice(index, 1);
+      }
       renderConnectionsList();
     });
+    container.appendChild(row);
+  });
+}
+
+// "Protocolli supportati": elenco a più righe come le Connessioni (IP), ma con una
+// tendina invece di un campo libero — niente popover di suggerimento, solo scelta
+// dalla tabella "Protocollo". Ogni riga esclude i protocolli già scelti nelle altre
+// righe dello stesso device (niente duplicati), mostrando comunque il proprio valore.
+function renderProtocolliList() {
+  const container = document.getElementById('devProtocolliList');
+  container.innerHTML = '';
+  const allProtocolli = tablesStore.labels('protocollo');
+
+  document.getElementById('btnAddProtocollo').style.display =
+    editingDevice.protocolli.length >= allProtocolli.length ? 'none' : '';
+
+  editingDevice.protocolli.forEach((value, index) => {
+    const row = document.createElement('div');
+    row.className = 'connection-row';
+    const select = document.createElement('select');
+    select.className = 'protocollo-select';
+    const usedByOthers = new Set(editingDevice.protocolli.filter((_, i) => i !== index));
+    const options = allProtocolli.filter(p => p === value || !usedByOthers.has(p));
+    populateSelect(select, options, !value);
+    select.value = value;
+    select.addEventListener('change', e => { editingDevice.protocolli[index] = e.target.value; renderProtocolliList(); });
+    row.appendChild(select);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn pow';
+    removeBtn.textContent = '🗑️';
+    removeBtn.addEventListener('click', () => {
+      if (value && !confirm(`Rimuovere "${value}" dai protocolli supportati?`)) return;
+      editingDevice.protocolli.splice(index, 1);
+      renderProtocolliList();
+    });
+    row.appendChild(removeBtn);
+
     container.appendChild(row);
   });
 }
@@ -492,9 +554,11 @@ function openDeviceDialog(device) {
   document.getElementById('devMarca').value = editingDevice.marca;
   document.getElementById('devModello').value = editingDevice.modello;
   document.getElementById('devTipoDispositivo').value = editingDevice.tipoDispositivo;
-  document.getElementById('devProtocollo').value = editingDevice.protocollo;
-  document.getElementById('devPhisicalHub').value = editingDevice.phisicalHub;
   document.getElementById('devManagingApp').value = editingDevice.managingApp;
+  document.getElementById('devPhisicalHub').value = editingDevice.phisicalHub;
+  document.getElementById('devProtocolloConnessione').value = editingDevice.protocolloConnessione;
+  if (!Array.isArray(editingDevice.protocolli)) editingDevice.protocolli = [];
+  renderProtocolliList();
 
   document.getElementById('devSSID').value = editingDevice.ssid;
   document.getElementById('devConnSpeed').value = editingDevice.connectionSpeed;
@@ -527,9 +591,10 @@ function collectFormIntoEditingDevice() {
   editingDevice.marca = document.getElementById('devMarca').value.trim();
   editingDevice.modello = document.getElementById('devModello').value.trim();
   editingDevice.tipoDispositivo = document.getElementById('devTipoDispositivo').value.trim();
-  editingDevice.protocollo = document.getElementById('devProtocollo').value.trim();
-  editingDevice.phisicalHub = document.getElementById('devPhisicalHub').value.trim();
   editingDevice.managingApp = document.getElementById('devManagingApp').value.trim();
+  editingDevice.phisicalHub = document.getElementById('devPhisicalHub').value.trim();
+  editingDevice.protocolloConnessione = document.getElementById('devProtocolloConnessione').value.trim();
+  // editingDevice.protocolli è già aggiornato in tempo reale da renderProtocolliList()
 
   editingDevice.ssid = document.getElementById('devSSID').value.trim();
   editingDevice.connectionSpeed = document.getElementById('devConnSpeed').value.trim();
@@ -605,7 +670,8 @@ function populateDeviceFormSelects() {
   populateSelect(document.getElementById('devType'), tablesStore.labels('devType'), true);
   populateSelect(document.getElementById('devAvanzamento'), tablesStore.labels('avanzamento'), false);
   populateSelect(document.getElementById('devTipoDispositivo'), tablesStore.labels('tipoDispositivo'), true);
-  populateSelect(document.getElementById('devProtocollo'), tablesStore.labels('protocollo'), true);
+  populateSelect(document.getElementById('devMarca'), tablesStore.labels('marca'), true);
+  populateSelect(document.getElementById('devProtocolloConnessione'), tablesStore.labels('protocollo'), true);
   populateSelect(document.getElementById('devPhisicalHub'), tablesStore.labels('phisicalHub'), true);
   populateSelect(document.getElementById('devManagingApp'), tablesStore.labels('managingApp'), true);
   populateSelect(document.getElementById('devSSID'), tablesStore.labels('ssid'), true);
@@ -625,8 +691,26 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Il blocco IP suggerito dipende dal Dev. Group: cambiandolo si aggiorna la lista.
-  document.getElementById('devGroup').addEventListener('change', () => {
-    editingDevice.devGroup = document.getElementById('devGroup').value;
+  // Se ci sono IP già impostati non compatibili col nuovo blocco, chiede conferma
+  // prima di cancellarli (mai una perdita silenziosa di dati); se l'utente annulla,
+  // il Dev. Group torna al valore precedente.
+  document.getElementById('devGroup').addEventListener('change', e => {
+    const oldGroup = editingDevice.devGroup;
+    const newGroup = e.target.value;
+    const newRange = DEV_GROUP_IP_RANGES[newGroup];
+    const newValidIps = newRange ? new Set(expandIpRange(newRange)) : null;
+    const incompatible = editingDevice.connections.some(c => c.ip && (!newValidIps || !newValidIps.has(c.ip)));
+
+    if (incompatible && !confirm('Gli indirizzi IP impostati non appartengono al blocco del nuovo Dev. Group e verranno cancellati. Continuare?')) {
+      e.target.value = oldGroup;
+      return;
+    }
+    if (incompatible) {
+      editingDevice.connections.forEach(c => {
+        if (c.ip && (!newValidIps || !newValidIps.has(c.ip))) c.ip = '';
+      });
+    }
+    editingDevice.devGroup = newGroup;
     renderConnectionsList();
   });
 
@@ -637,6 +721,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnAddConnection').addEventListener('click', () => {
     editingDevice.connections.push({ ip: '', note: '' });
     renderConnectionsList();
+  });
+
+  document.getElementById('btnAddProtocollo').addEventListener('click', () => {
+    editingDevice.protocolli.push('');
+    renderProtocolliList();
   });
 
   document.getElementById('btnDeviceCancel').addEventListener('click', () => {

@@ -64,11 +64,18 @@ function renderTabelleTabRows(def) {
   container.querySelectorAll('.tabelle-row').forEach(row => wireTabelleRowDelete(row, def));
 }
 
+// Un valore "usa" il campo di un device: uguaglianza per i campi scalari,
+// appartenenza all'array per quelli multipli (es. "Protocolli supportati").
+function deviceUsesValue(device, devicesField, value) {
+  const raw = device[devicesField.field];
+  return devicesField.type === 'array' ? (raw || []).includes(value) : raw === value;
+}
+
 function wireTabelleRowDelete(row, def) {
   row.querySelector('.btn.pow').addEventListener('click', () => {
     const original = row.dataset.originalLabel;
     if (original) {
-      const count = devicesStore.devices.filter(d => d[def.devicesField] === original).length;
+      const count = devicesStore.devices.filter(d => def.devicesFields.some(df => deviceUsesValue(d, df, original))).length;
       if (count > 0) {
         const plurale = count > 1 ? 'i' : 'o';
         const ok = confirm(
@@ -231,12 +238,30 @@ async function saveTabelleTab(def) {
   let devicesChanged = false;
   renames.forEach(({ from, to }) => {
     devicesStore.devices.forEach(d => {
-      if (d[def.devicesField] === from) { d[def.devicesField] = to; devicesChanged = true; }
+      def.devicesFields.forEach(df => {
+        if (df.type === 'array') {
+          const arr = d[df.field] || [];
+          const i = arr.indexOf(from);
+          if (i !== -1) { arr[i] = to; devicesChanged = true; }
+        } else if (d[df.field] === from) {
+          d[df.field] = to;
+          devicesChanged = true;
+        }
+      });
     });
   });
   deletions.forEach(value => {
     devicesStore.devices.forEach(d => {
-      if (d[def.devicesField] === value) { d[def.devicesField] = ''; devicesChanged = true; }
+      def.devicesFields.forEach(df => {
+        if (df.type === 'array') {
+          const arr = d[df.field] || [];
+          const i = arr.indexOf(value);
+          if (i !== -1) { arr.splice(i, 1); devicesChanged = true; }
+        } else if (d[df.field] === value) {
+          d[df.field] = '';
+          devicesChanged = true;
+        }
+      });
     });
   });
 

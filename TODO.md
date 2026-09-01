@@ -135,10 +135,46 @@
   **Non ancora confermato funzionante da Marco — verificare alla ripresa.**
 - Cache-busting arrivato a v33 nel corso della sessione.
 
+## Fatto — sessione 2026-09-01
+
+- **Script di avvio del server locale**: aggiunto `avvia-server-locale.sh` in `Smart Home/` (fuori da
+  `Codice/`), lancia `python3 -m http.server 5500` sulla cartella Codice — comodo dopo un riavvio,
+  stesso comando già usato manualmente nelle sessioni precedenti.
+- **Editor Device, campi IP bloccati senza Dev. Group**: senza un Dev. Group impostato, i campi IP e
+  Nota di ogni connessione sono ora disabilitati (placeholder esplicito) e il pulsante "+ Aggiungi
+  connessione" resta nascosto, invece di lasciare l'IP come testo libero senza vincoli.
+- **Bug reale nel popover di suggerimento IP**: la selezione di un IP suggerito non funzionava —
+  causa verificata con test diretto nel browser (non un'ipotesi): il popover, pur disegnato sopra il
+  `<dialog>` modale grazie al top layer della Popover API, viveva fuori dal sottoalbero DOM del
+  dialog, che lo rendeva "inerte" (non cliccabile) anche se visibile. Risolto appendendo il popover
+  dentro il dialog stesso invece che a `<body>`. **Confermato funzionante da Marco.**
+- **Cambio Dev. Group con IP già impostati**: se gli IP presenti non appartengono al blocco del nuovo
+  gruppo, un avviso chiede conferma prima di cancellarli; annullando, il Dev. Group torna al valore
+  precedente e nulla viene toccato.
+- **Cestino sulle righe Connessioni (IP/Nota)**: sull'unica riga rimasta, invece di essere disabilitato
+  (nessun effetto al click), ora svuota il contenuto della riga. Aggiunta anche una conferma prima di
+  eliminare/svuotare una riga con contenuto, trattandosi di un'azione irreversibile (nessuna conferma
+  se la riga è già vuota).
+- **Devices: titolo e testata della tabella fissi, scroll verticale solo sulle righe**: il contenitore
+  della tabella (`.table-responsive`) è diventato l'unico contenitore con scroll verticale, con la
+  testata ancorata (`position: sticky`) in cima ad esso — titolo e barra di ricerca/pulsante "Nuovo
+  Device" restano fuori da quell'area e non scorrono mai. **Confermato funzionante da Marco.**
+- **Campo Marca diventato tabella**: nuova tabella "Marca" in Tabelle (10ª, valori iniziali = le
+  marche già presenti nei device), il campo nell'editor Device passa da testo libero a tendina.
+- **Campo Protocollo diviso in due**: "Protocollo" (scelta singola) sostituito da **"Protocolli
+  supportati"** (elenco a più righe, stessa logica delle Connessioni IP ma con tendina invece di
+  campo libero, niente duplicati tra le righe dello stesso device) e **"Protocollo di Connessione"**
+  (nuovo campo, scelta singola) — entrambi alimentati dalla stessa tabella "Protocollo" già esistente.
+  Managing App e Protocollo si sono scambiati posizione nel form, su richiesta esplicita. Migrazione
+  automatica al primo caricamento: il vecchio valore singolo di ogni device viene copiato sia in
+  "Protocolli supportati" sia in "Protocollo di Connessione", nessun dato perso. La colonna
+  "Protocollo" nella tabella Devices mostra ora "Protocollo di Connessione". Propagazione di
+  rinomina/eliminazione da Tabelle estesa per gestire anche il campo ad array. **Confermato
+  funzionante da Marco.**
+- Cache-busting arrivato a v39 (JS) / v35 (CSS) nel corso della sessione.
+
 ## Da fare — prossimo passo
 
-- [ ] **Verificare il suggerimento IP** nell'editor Device (avviso Dev. Group, freccina, popover
-      con gli IP liberi del blocco riservato): non ancora confermato funzionante da Marco.
 - [ ] Altre "scene" di Colori oltre a "Finestra e tabella" (es. Bottoni, Badge, Campi form) — stesso
       pattern a insiemi finiti chiaro/scuro, non ancora estese.
 - [ ] Nessun vero switch chiaro/scuro a runtime: il tema Scuro è modificabile e salvato in Colori ma
@@ -154,6 +190,11 @@
       Tenda Armadio, Tenda Letto): rimossi volutamente dall'app da Marco, l'Excel non è ancora stato
       allineato di conseguenza (non un'azione per Claude — Marco userà a breve l'app come unica
       fonte, l'Excel diventerà obsoleto).
+- [ ] Possibile nuovo layer StorageProvider per SQL Server (Aruba): Marco potrebbe presto avere una
+      connessione remota disponibile — se/quando succede, valutare un nuovo `SqlServerProvider` con
+      la stessa interfaccia di `OneDriveProvider` e un selettore in Config per scegliere il tipo di
+      connessione. Serve comunque un layer API/backend intermedio (il browser non può parlare
+      direttamente con SQL Server). Nessuna azione finché la connessione non è disponibile.
 
 ## Note — non decisioni aperte, non richiedono follow-up
 

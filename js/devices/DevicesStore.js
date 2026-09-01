@@ -17,6 +17,7 @@ class DevicesStore {
   async load() {
     const { data, version } = await this._storageProvider.load(this._resourceKey);
     this.devices = (data && Array.isArray(data.devices)) ? data.devices : [];
+    this.devices.forEach(migrateProtocolloField);
     this._version = version;
     return this.devices;
   }
@@ -72,6 +73,16 @@ class DevicesStore {
   }
 }
 
+// Migrazione una tantum: il vecchio campo singolo "protocollo" diventa i due nuovi
+// campi "Protocolli supportati" (array) e "Protocollo di Connessione" (singolo) —
+// nessun dato perso, entrambi partono dallo stesso valore già presente.
+function migrateProtocolloField(device) {
+  if (device.protocollo === undefined) return;
+  if (!Array.isArray(device.protocolli)) device.protocolli = device.protocollo ? [device.protocollo] : [];
+  if (device.protocolloConnessione === undefined) device.protocolloConnessione = device.protocollo || '';
+  delete device.protocollo;
+}
+
 function makeEmptyDevice() {
   return {
     id: crypto.randomUUID(),
@@ -80,7 +91,8 @@ function makeEmptyDevice() {
     modello: '',
     avanzamento: tablesStore.labels('avanzamento')[0],
     tipoDispositivo: '',
-    protocollo: '',
+    protocolli: [],
+    protocolloConnessione: '',
     phisicalHub: '',
     managingApp: '',
     ssid: '',

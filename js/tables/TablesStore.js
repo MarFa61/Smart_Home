@@ -15,16 +15,24 @@
 
 // "kind: labelHost" alimenta anche l'Host Name (serve un codice host oltre
 // all'etichetta); "kind: label" è una tabella di sole etichette.
+// "devicesFields" elenca dove un valore di questa tabella finisce sui device — di norma
+// un solo campo scalare (confronto per uguaglianza), ma "protocollo" ne alimenta due:
+// l'elenco "Protocolli supportati" (array, il valore può comparire in una qualsiasi
+// posizione) e il campo singolo "Protocollo di Connessione".
 const TABLE_DEFS = [
-  { id: 'avanzamento', title: 'Avanzamento', kind: 'label', devicesField: 'avanzamento' },
-  { id: 'tipoDispositivo', title: 'Tipo dispositivo', kind: 'label', devicesField: 'tipoDispositivo' },
-  { id: 'protocollo', title: 'Protocollo', kind: 'label', devicesField: 'protocollo' },
-  { id: 'phisicalHub', title: 'Phisical Hub', kind: 'label', devicesField: 'phisicalHub' },
-  { id: 'managingApp', title: 'Managing App', kind: 'label', devicesField: 'managingApp' },
-  { id: 'ssid', title: 'SSID', kind: 'label', devicesField: 'ssid' },
-  { id: 'devCategory', title: 'Categoria', kind: 'labelHost', devicesField: 'devCategory' },
-  { id: 'devZone', title: 'Zona', kind: 'labelHost', devicesField: 'devZone' },
-  { id: 'devType', title: 'Tipo', kind: 'labelHost', devicesField: 'devType' },
+  { id: 'avanzamento', title: 'Avanzamento', kind: 'label', devicesFields: [{ field: 'avanzamento', type: 'scalar' }] },
+  { id: 'tipoDispositivo', title: 'Tipo dispositivo', kind: 'label', devicesFields: [{ field: 'tipoDispositivo', type: 'scalar' }] },
+  { id: 'marca', title: 'Marca', kind: 'label', devicesFields: [{ field: 'marca', type: 'scalar' }] },
+  { id: 'protocollo', title: 'Protocollo', kind: 'label', devicesFields: [
+    { field: 'protocolli', type: 'array' },
+    { field: 'protocolloConnessione', type: 'scalar' },
+  ] },
+  { id: 'phisicalHub', title: 'Phisical Hub', kind: 'label', devicesFields: [{ field: 'phisicalHub', type: 'scalar' }] },
+  { id: 'managingApp', title: 'Managing App', kind: 'label', devicesFields: [{ field: 'managingApp', type: 'scalar' }] },
+  { id: 'ssid', title: 'SSID', kind: 'label', devicesFields: [{ field: 'ssid', type: 'scalar' }] },
+  { id: 'devCategory', title: 'Categoria', kind: 'labelHost', devicesFields: [{ field: 'devCategory', type: 'scalar' }] },
+  { id: 'devZone', title: 'Zona', kind: 'labelHost', devicesFields: [{ field: 'devZone', type: 'scalar' }] },
+  { id: 'devType', title: 'Tipo', kind: 'labelHost', devicesFields: [{ field: 'devType', type: 'scalar' }] },
 ];
 
 const TABLE_DEFAULTS = {
@@ -33,6 +41,8 @@ const TABLE_DEFAULTS = {
     'Desktop PC', 'Door/Window Sensor', 'Hub Zigbee', 'LED', 'Lampadina', 'NAS', 'Presence Sensor', 'Printer',
     'RF Legacy', 'Robot', 'Router', 'Sleep Analyzer', 'Smart Hub', 'Smart Plug', 'Smart Switch',
     'Smart Water Valve', 'Smartphone', 'Stazione Meteo', 'Switch', 'TV', 'TV add-on', 'Tablet', 'Termostato'],
+  marca: ['Amazon', 'Apple', 'Athom', 'Daikin', 'Elgato', 'Epson', 'Google', 'Govee', 'Legrand Netatmo', 'Lunvon',
+    'Maxcio', 'Meross', 'Mova', 'NetGear', 'Philips Hue', 'Samsung', 'Sonoff', 'Sonos', 'Synology', 'Withings', 'tp-link'],
   protocollo: ['433,92 MHz', 'Ethernet (by wire)', 'N/A', 'Wi-Fi', 'Wi-Fi/Bluetooth', 'Zigbee'],
   phisicalHub: ['Homey Pro', 'Mac Mini (by wire)', 'Netgear Orbi', 'None', 'Philips Hue Bridge', 'Samsung TV (direct)'],
   managingApp: ['Alexa', 'Amazon', 'Casa', 'Control by Legrand', 'Elgato Streamdeck', 'Epson', 'Google',

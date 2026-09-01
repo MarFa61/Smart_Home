@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Home</title>
-  <link rel="stylesheet" href="./css/theme.css?v=33">
+  <link rel="stylesheet" href="./css/theme.css?v=35">
   <script src="./js/vendor/msal-browser.min.js"></script>
   <script src="./js/storage/StorageProvider.js?v=33" defer></script>
   <script src="./js/storage/OneDriveProvider.js?v=33" defer></script>
@@ -13,11 +13,11 @@
   <script src="./js/device-status-icon.js?v=33" defer></script>
   <script src="./js/devices/lookups.js?v=33" defer></script>
   <script src="./js/devices/hostname.js?v=33" defer></script>
-  <script src="./js/devices/DevicesStore.js?v=33" defer></script>
+  <script src="./js/devices/DevicesStore.js?v=39" defer></script>
   <script src="./js/devices/ColumnWidthStore.js?v=33" defer></script>
-  <script src="./js/tables/TablesStore.js?v=33" defer></script>
-  <script src="./js/tables/tables-ui.js?v=33" defer></script>
-  <script src="./js/devices/devices-ui.js?v=33" defer></script>
+  <script src="./js/tables/TablesStore.js?v=39" defer></script>
+  <script src="./js/tables/tables-ui.js?v=39" defer></script>
+  <script src="./js/devices/devices-ui.js?v=39" defer></script>
   <script src="./js/config/ConfigStore.js?v=33" defer></script>
   <script src="./js/config/color-components.js?v=33" defer></script>
   <script src="./js/config/ColorStore.js?v=33" defer></script>
@@ -185,7 +185,7 @@
       </div>
       <div class="dlg-form-group">
         <label for="devMarca">Marca</label>
-        <input type="text" id="devMarca">
+        <select id="devMarca"></select>
       </div>
       <div class="dlg-form-group">
         <label for="devModello">Modello</label>
@@ -196,16 +196,21 @@
         <select id="devTipoDispositivo"></select>
       </div>
       <div class="dlg-form-group">
-        <label for="devProtocollo">Protocollo</label>
-        <select id="devProtocollo"></select>
+        <label for="devManagingApp">Managing App</label>
+        <select id="devManagingApp"></select>
       </div>
       <div class="dlg-form-group">
         <label for="devPhisicalHub">Phisical Hub</label>
         <select id="devPhisicalHub"></select>
       </div>
+      <div class="dlg-form-group">
+        <label for="devProtocolloConnessione">Protocollo di Connessione</label>
+        <select id="devProtocolloConnessione"></select>
+      </div>
       <div class="dlg-form-group full-width">
-        <label for="devManagingApp">Managing App</label>
-        <select id="devManagingApp"></select>
+        <label>Protocolli supportati</label>
+        <div id="devProtocolliList"></div>
+        <button type="button" class="btn edit" id="btnAddProtocollo" style="margin-top:6px; align-self:flex-start;">+ Aggiungi protocollo</button>
       </div>
     </div>
 
