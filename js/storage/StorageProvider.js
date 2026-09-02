@@ -33,7 +33,7 @@ class StorageProvider {
 
 class StorageConflictError extends Error {
   constructor(resourceKey) {
-    super(`Conflitto di salvataggio su "${resourceKey}": i dati remoti sono cambiati nel frattempo.`);
+    super(`Save conflict on "${resourceKey}": remote data changed in the meantime.`);
     this.name = 'StorageConflictError';
     this.resourceKey = resourceKey;
   }

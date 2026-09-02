@@ -27,7 +27,7 @@ function buildTabelleRow(kind, label, host) {
   const labelInput = document.createElement('input');
   labelInput.type = 'text';
   labelInput.className = 'tabelle-value';
-  labelInput.placeholder = 'Etichetta';
+  labelInput.placeholder = 'Label';
   labelInput.value = label;
   row.appendChild(labelInput);
 
@@ -35,7 +35,7 @@ function buildTabelleRow(kind, label, host) {
     const hostInput = document.createElement('input');
     hostInput.type = 'text';
     hostInput.className = 'tabelle-host';
-    hostInput.placeholder = 'Codice host';
+    hostInput.placeholder = 'Host code';
     hostInput.value = host || '';
     row.appendChild(hostInput);
   }
@@ -44,16 +44,29 @@ function buildTabelleRow(kind, label, host) {
   delBtn.type = 'button';
   delBtn.className = 'btn pow';
   delBtn.textContent = '🗑';
-  delBtn.title = 'Elimina valore';
+  delBtn.title = 'Delete value';
   row.appendChild(delBtn);
 
   return row;
 }
 
+// Ordine alfabetico crescente in visualizzazione, non sullo storage: una riga appena
+// aggiunta resta in fondo (modificabile) finché non si ricarica/risalva, invece di
+// saltare subito in mezzo all'elenco mentre l'utente sta ancora scrivendo l'etichetta.
+function sortedEntriesForDisplay(def) {
+  const entries = (tablesStore.tables[def.id] || []).slice();
+  entries.sort((a, b) => {
+    const labelA = def.kind === 'labelHost' ? a.label : a;
+    const labelB = def.kind === 'labelHost' ? b.label : b;
+    return String(labelA).localeCompare(String(labelB), 'it', { numeric: true, sensitivity: 'base' });
+  });
+  return entries;
+}
+
 function renderTabelleTabRows(def) {
   const container = document.getElementById(tabelleRowsContainerId(def.id));
   container.innerHTML = '';
-  const entries = tablesStore.tables[def.id] || [];
+  const entries = sortedEntriesForDisplay(def);
   entries.forEach(entry => {
     const row = def.kind === 'labelHost'
       ? buildTabelleRow('labelHost', entry.label, entry.host)
@@ -77,10 +90,10 @@ function wireTabelleRowDelete(row, def) {
     if (original) {
       const count = devicesStore.devices.filter(d => def.devicesFields.some(df => deviceUsesValue(d, df, original))).length;
       if (count > 0) {
-        const plurale = count > 1 ? 'i' : 'o';
+        const plural = count > 1 ? 's' : '';
         const ok = confirm(
-          `"${original}" è usato da ${count} dispositiv${plurale}. Eliminandolo, quei dispositivi ` +
-          `perderanno questo valore (verrà svuotato). Continuare?`
+          `"${original}" is used by ${count} device${plural}. Deleting it will clear this value on ` +
+          `${count > 1 ? 'those devices' : 'that device'}. Continue?`
         );
         if (!ok) return;
       }
@@ -110,7 +123,7 @@ function renderTabelleTabsArea() {
       tabsBar.appendChild(divider);
       const groupLabel = document.createElement('span');
       groupLabel.className = 'tabelle-tabs-group-label';
-      groupLabel.textContent = 'Compongono l\'Host Name';
+      groupLabel.textContent = 'Make up the Host Name';
       tabsBar.appendChild(groupLabel);
     }
 
@@ -120,7 +133,7 @@ function renderTabelleTabsArea() {
     tabBtn.dataset.tabelleTab = def.id;
     tabBtn.textContent = def.title;
     tabBtn.addEventListener('click', async () => {
-      if (!await confirmDiscardUnsavedChanges('Cambiando tab')) return;
+      if (!await confirmDiscardUnsavedChanges('Changing tab')) return;
       switchTabelleTab(def.id);
     });
     tabsBar.appendChild(tabBtn);
@@ -130,14 +143,14 @@ function renderTabelleTabsArea() {
     content.id = tabelleTabContentId(def.id);
     content.innerHTML = `
       ${def.kind === 'labelHost' ? `
-        <p class="tabelle-hostname-note">Categoria, Zona e Tipo compongono insieme, con Dev. Id., l'Host Name di
-        ogni dispositivo. Il codice host qui accanto a ogni etichetta è quello che finisce nell'Host Name: se lo
-        cambi, l'Host Name si aggiorna subito ovunque, senza bisogno di modificare i singoli dispositivi.</p>
+        <p class="tabelle-hostname-note">Category, Zone and Type together make up, with Dev. Id., the Host Name of
+        each device. The host code next to each label here is the one that ends up in the Host Name: if you
+        change it, the Host Name updates immediately everywhere, with no need to edit individual devices.</p>
       ` : ''}
       <div id="${tabelleRowsContainerId(def.id)}" class="tabelle-rows"></div>
       <div style="display:flex; gap:10px; margin-top:10px;">
-        <button type="button" class="btn edit" data-action="add">+ Aggiungi valore</button>
-        <button type="button" class="btn btn-primary-add" data-action="save">💾 Salva</button>
+        <button type="button" class="btn edit" data-action="add">+ Add value</button>
+        <button type="button" class="btn btn-primary-add" data-action="save">💾 Save</button>
       </div>
       <p id="${tabelleStatusId(def.id)}" style="font-size:13px; color:var(--text-secondary); margin-top:10px;"></p>
     `;
@@ -164,7 +177,7 @@ function checkTabelleUnsavedChanges() {
   const def = activeTabelleTabDef();
   if (!def || !tabelleTabHasUnsavedChanges(def)) return null;
   return {
-    message: `Ci sono modifiche non salvate in "${def.title}" (Tabelle).`,
+    message: `There are unsaved changes in "${def.title}" (Tables).`,
     save: () => saveTabelleTab(def),
     discard: () => {
       renderTabelleTabRows(def);
@@ -185,7 +198,10 @@ function tabelleTabHasUnsavedChanges(def) {
     const label = row.querySelector('.tabelle-value').value.trim();
     return def.kind === 'labelHost' ? { label, host: row.querySelector('.tabelle-host').value.trim() } : label;
   });
-  const saved = tablesStore.tables[def.id] || [];
+  // Confrontato con l'ordine visualizzato (già alfabetico), non quello grezzo dello
+  // storage: altrimenti aprire un tab il cui storage non è ancora in ordine alfabetico
+  // segnalerebbe "modifiche non salvate" senza che l'utente abbia toccato nulla.
+  const saved = sortedEntriesForDisplay(def);
   if (current.length !== saved.length) return true;
   return current.some((entry, i) => def.kind === 'labelHost'
     ? (entry.label !== saved[i].label || entry.host !== (saved[i].host || ''))
@@ -216,8 +232,8 @@ async function saveTabelleTab(def) {
   for (const row of rows) {
     const label = row.querySelector('.tabelle-value').value.trim();
     const host = def.kind === 'labelHost' ? row.querySelector('.tabelle-host').value.trim() : undefined;
-    if (!label) { statusEl.textContent = 'Errore: non può esserci un valore vuoto.'; return false; }
-    if (seenLabels.has(label)) { statusEl.textContent = `Errore: "${label}" è duplicato.`; return false; }
+    if (!label) { statusEl.textContent = 'Error: a value cannot be empty.'; return false; }
+    if (seenLabels.has(label)) { statusEl.textContent = `Error: "${label}" is a duplicate.`; return false; }
     seenLabels.add(label);
 
     newEntries.push(def.kind === 'labelHost' ? { label, host } : label);
@@ -268,7 +284,7 @@ async function saveTabelleTab(def) {
   try {
     await tablesStore.save();
     if (devicesChanged) await devicesStore.save();
-    statusEl.textContent = 'Salvato.';
+    statusEl.textContent = 'Saved.';
     populateDeviceFormSelects();
     renderDevicesHeader();
     renderDevicesTable();
@@ -276,9 +292,9 @@ async function saveTabelleTab(def) {
     return true;
   } catch (error) {
     if (error.name === 'StorageConflictError') {
-      statusEl.textContent = 'Conflitto: i dati sono cambiati altrove. Ricarica la pagina e riprova.';
+      statusEl.textContent = 'Conflict: data changed elsewhere. Reload the page and try again.';
     } else {
-      statusEl.textContent = `Errore: ${error.message}`;
+      statusEl.textContent = `Error: ${error.message}`;
     }
     return false;
   }
@@ -289,30 +305,30 @@ async function loadAndShowTabelle() {
   if (devicesStore.devices.length === 0) await devicesStore.load();
   renderTabelleTabsArea();
 
-  setConnStatusIcon(document.getElementById('tabelleConnStatus'), true, `Connesso a OneDrive (${appStorage.connectedAccountEmail()}).`);
+  setConnStatusIcon(document.getElementById('tabelleConnStatus'), true, `Connected to OneDrive (${appStorage.connectedAccountEmail()}).`);
   document.getElementById('btnTabelleConnect').style.display = 'none';
   document.getElementById('btnTabelleDisconnect').style.display = 'inline-block';
   document.getElementById('tabelleConnectPlaceholder').style.display = 'none';
-  document.getElementById('tabelleTabsArea').style.display = 'block';
+  document.getElementById('tabelleTabsArea').style.display = 'flex';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   registerUnsavedChangesChecker(checkTabelleUnsavedChanges);
-  setConnStatusIcon(document.getElementById('tabelleConnStatus'), false, 'Non connesso a OneDrive.');
+  setConnStatusIcon(document.getElementById('tabelleConnStatus'), false, 'Not connected to OneDrive.');
 
   document.getElementById('btnTabelleConnect').addEventListener('click', async () => {
     try {
-      document.getElementById('tabelleConnStatus').textContent = 'Connessione in corso…';
+      document.getElementById('tabelleConnStatus').textContent = 'Connecting…';
       await appStorage.connect();
       await loadAndShowTabelle();
     } catch (error) {
-      document.getElementById('tabelleConnStatus').textContent = `Errore di connessione: ${error.message}`;
+      document.getElementById('tabelleConnStatus').textContent = `Connection error: ${error.message}`;
     }
   });
 
   document.getElementById('btnTabelleDisconnect').addEventListener('click', async () => {
     await appStorage.disconnect();
-    setConnStatusIcon(document.getElementById('tabelleConnStatus'), false, 'Non connesso a OneDrive.');
+    setConnStatusIcon(document.getElementById('tabelleConnStatus'), false, 'Not connected to OneDrive.');
     document.getElementById('btnTabelleConnect').style.display = 'inline-block';
     document.getElementById('btnTabelleDisconnect').style.display = 'none';
     document.getElementById('tabelleTabsArea').style.display = 'none';

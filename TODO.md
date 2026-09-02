@@ -173,7 +173,40 @@
   funzionante da Marco.**
 - Cache-busting arrivato a v39 (JS) / v35 (CSS) nel corso della sessione.
 
+## Fatto — sessione 2026-09-02
+
+- **Dialog Device, altezza dei campi non uniforme**: causa verificata sui pixel di uno
+  screenshot (non un'ipotesi) — i `<select>` nativi rendono più bassi degli `<input>` a
+  parità di padding/bordo (differenza di rendering del browser), mentre nella riga
+  "Protocolli supportati" succedeva l'opposto (la select veniva stirata all'altezza del
+  pulsante cestino accanto, per il layout flex della riga). Risolto con un'altezza fissa
+  a 36px su input/select del dialog (escluse color e textarea) e sui pulsanti cestino
+  delle righe Connessioni/Protocolli, senza toccare le larghezze.
+- **Interfaccia tradotta in inglese**: tutte le etichette statiche (campi form,
+  intestazioni colonna, tab, sidebar — "Tabelle" → "Tables"), i tooltip della pagina
+  Colori e i messaggi dinamici (alert, conferme, errori) sono ora in inglese
+  (`lang="it"` → `lang="en"` in index.html). Lasciati di proposito in italiano: i valori
+  delle tabelle di lookup (Marca, Categoria, Zona, Tipo, Dev. Group, ecc.) già salvati
+  sui dispositivi reali su OneDrive e usati per generare l'Host Name; le chiavi interne
+  di Colori (`chiaro`/`scuro`, `sfondo`/`primoPiano`, id dei componenti) già salvate come
+  override in config.json; i commenti nel codice.
+- **Pulsante "Nuovo Device" con icona**: sostituita la label "New Device" con icona +
+  "New". Icona ricavata da `Icons/New Device.png` (fornita da Marco), ritagliata dallo
+  spazio bianco e resa trasparente (altrimenti sul pulsante blu compariva un riquadro
+  bianco), salvata come `img/new-device-icon.png`. Altezza finale 45px su richiesta
+  esplicita di Marco (più alta del pulsante stesso, che quindi si allarga in verticale
+  per contenerla).
+- Cache-busting aggiornato su tutti i file toccati.
+- **Non ancora testato da Marco**: nessuna delle modifiche di questa sessione è stata
+  verificata dal vivo (per policy, il test dell'app è sempre un'azione di Marco).
+
 ## Da fare — prossimo passo
+
+- [ ] Login OneDrive in locale: errore Microsoft "invalid_request: redirect_uri non
+      valido" riscontrato da Marco durante il test di questa sessione — verificare che
+      l'URL esatto in barra indirizzi (porta/percorso, slash finale incluso) corrisponda
+      al redirect URI registrato su Entra ID (dovrebbe essere `http://localhost:5500/`).
+      Non ancora risolto, interrotto per passare ad altro.
 
 - [ ] Altre "scene" di Colori oltre a "Finestra e tabella" (es. Bottoni, Badge, Campi form) — stesso
       pattern a insiemi finiti chiaro/scuro, non ancora estese.

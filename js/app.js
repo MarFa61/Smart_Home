@@ -62,7 +62,7 @@ async function confirmDiscardUnsavedChanges(actionLabel) {
   const unsaved = findUnsavedChanges();
   if (!unsaved) return true;
 
-  const choice = await showUnsavedChangesDialog(`${unsaved.message} ${actionLabel} andranno perse.`);
+  const choice = await showUnsavedChangesDialog(`${unsaved.message} ${actionLabel} will lose them.`);
   if (choice === 'stay') return false;
   if (choice === 'discard') { unsaved.discard(); return true; }
   if (choice === 'save') return await unsaved.save();
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.sidebar-item').forEach(item => {
     item.addEventListener('click', async () => {
       if (item.classList.contains('active')) return;
-      if (!await confirmDiscardUnsavedChanges('Cambiando sezione')) return;
+      if (!await confirmDiscardUnsavedChanges('Changing section')) return;
       selectSection(item.dataset.section);
     });
   });

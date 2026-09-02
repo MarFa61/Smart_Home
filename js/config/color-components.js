@@ -18,8 +18,8 @@ const COLOR_COMPONENTS = [
   {
     id: 'sfondoFinestra',
     categoria: 'Finestra e tabella',
-    nome: 'Sfondo finestra',
-    descrizione: 'Sfondo generale dietro le card, in ogni sezione dell\'app.',
+    nome: 'Window background',
+    descrizione: 'General background behind the cards, in every section of the app.',
     slots: ['sfondo'],
     cssVar: { sfondo: '--bg-main' },
     defaultChiaro: { sfondo: '#f4f6f9' },
@@ -28,8 +28,8 @@ const COLOR_COMPONENTS = [
   {
     id: 'sfondoSidebar',
     categoria: 'Finestra e tabella',
-    nome: 'Sfondo sidebar',
-    descrizione: 'Sfondo del menu laterale (Devices, Config).',
+    nome: 'Sidebar background',
+    descrizione: 'Background of the side menu (Devices, Config).',
     slots: ['sfondo'],
     cssVar: { sfondo: '--sidebar-bg' },
     defaultChiaro: { sfondo: '#eef1f6' },
@@ -38,8 +38,8 @@ const COLOR_COMPONENTS = [
   {
     id: 'sfondoCard',
     categoria: 'Finestra e tabella',
-    nome: 'Sfondo card',
-    descrizione: 'Sfondo dei pannelli principali (es. la card di Devices, quella di Colori).',
+    nome: 'Card background',
+    descrizione: 'Background of the main panels (e.g. the Devices card, the Colors one).',
     slots: ['sfondo'],
     cssVar: { sfondo: '--card-bg' },
     defaultChiaro: { sfondo: '#ffffff' },
@@ -48,8 +48,8 @@ const COLOR_COMPONENTS = [
   {
     id: 'titoloPagina',
     categoria: 'Finestra e tabella',
-    nome: 'Titolo pagina',
-    descrizione: 'Testo del titolo grande in cima a ogni sezione (es. "Devices", "Colori").',
+    nome: 'Page title',
+    descrizione: 'Text of the large title at the top of each section (e.g. "Devices", "Colors").',
     slots: ['primoPiano'],
     cssVar: { primoPiano: '--title-color' },
     defaultChiaro: { primoPiano: '#1a1a1a' },
@@ -58,8 +58,8 @@ const COLOR_COMPONENTS = [
   {
     id: 'sfondoIntestazioneTabella',
     categoria: 'Finestra e tabella',
-    nome: 'Sfondo intestazione tabella',
-    descrizione: 'Sfondo della riga di intestazione colonne nella tabella Devices.',
+    nome: 'Table header background',
+    descrizione: 'Background of the column header row in the Devices table.',
     slots: ['sfondo'],
     cssVar: { sfondo: '--table-header-bg' },
     defaultChiaro: { sfondo: '#f8f9fa' },
@@ -68,8 +68,8 @@ const COLOR_COMPONENTS = [
   {
     id: 'testoIntestazioneTabella',
     categoria: 'Finestra e tabella',
-    nome: 'Testo intestazione tabella',
-    descrizione: 'Testo delle etichette di colonna (es. "Nickname", "Marca") nella tabella Devices.',
+    nome: 'Table header text',
+    descrizione: 'Text of the column labels (e.g. "Nickname", "Brand") in the Devices table.',
     slots: ['primoPiano'],
     cssVar: { primoPiano: '--table-header-text' },
     defaultChiaro: { primoPiano: '#555555' },
@@ -78,8 +78,8 @@ const COLOR_COMPONENTS = [
   {
     id: 'testoPrincipale',
     categoria: 'Finestra e tabella',
-    nome: 'Testo principale',
-    descrizione: 'Colore di testo di default: righe della tabella, etichette dei campi nei form.',
+    nome: 'Main text',
+    descrizione: 'Default text color: table rows, field labels in forms.',
     slots: ['primoPiano'],
     cssVar: { primoPiano: '--text-color' },
     defaultChiaro: { primoPiano: '#333333' },
@@ -88,8 +88,8 @@ const COLOR_COMPONENTS = [
   {
     id: 'testoSecondario',
     categoria: 'Finestra e tabella',
-    nome: 'Testo secondario',
-    descrizione: 'Testo meno importante: messaggi segnaposto, note esplicative.',
+    nome: 'Secondary text',
+    descrizione: 'Less important text: placeholder messages, explanatory notes.',
     slots: ['primoPiano'],
     cssVar: { primoPiano: '--text-secondary' },
     defaultChiaro: { primoPiano: '#888888' },
@@ -98,8 +98,8 @@ const COLOR_COMPONENTS = [
   {
     id: 'dividerRigaTabella',
     categoria: 'Finestra e tabella',
-    nome: 'Divider riga tabella',
-    descrizione: 'Linea sottile che separa una riga dalla successiva nella tabella Devices.',
+    nome: 'Table row divider',
+    descrizione: 'Thin line separating one row from the next in the Devices table.',
     slots: ['primoPiano'],
     cssVar: { primoPiano: '--border-color' },
     defaultChiaro: { primoPiano: '#e0e0e0' },
@@ -112,8 +112,8 @@ const COLOR_COMPONENTS = [
     // ordinamento usano direttamente --table-header-text (stesso colore del testo delle
     // label di colonna, non solo uguale per default), già configurabile sopra come
     // "Testo intestazione tabella".
-    nome: 'Icona ordinamento/filtro colonna (attiva)',
-    descrizione: 'Colore dell\'icona di filtro quando il filtro è applicato, e della freccia quando la colonna è quella ordinata.',
+    nome: 'Column sort/filter icon (active)',
+    descrizione: 'Color of the filter icon when the filter is applied, and of the arrow when the column is the sorted one.',
     slots: ['primoPiano'],
     cssVar: { primoPiano: '--table-icon-active-color' },
     // Blu (stesso di --primary): un giallo/arancio, per quanto "intenso", rischia di
@@ -125,8 +125,8 @@ const COLOR_COMPONENTS = [
   {
     id: 'dividerIntestazioneTabella',
     categoria: 'Finestra e tabella',
-    nome: 'Divider intestazione tabella',
-    descrizione: 'Linea verticale sottile che separa una colonna dalla successiva, solo nella riga di intestazione della tabella Devices.',
+    nome: 'Table header divider',
+    descrizione: 'Thin vertical line separating one column from the next, only in the header row of the Devices table.',
     slots: ['primoPiano'],
     cssVar: { primoPiano: '--table-header-divider-color' },
     defaultChiaro: { primoPiano: '#b0b0b0' },
@@ -135,8 +135,8 @@ const COLOR_COMPONENTS = [
   {
     id: 'barraRicerca',
     categoria: 'Finestra e tabella',
-    nome: 'Barra di ricerca',
-    descrizione: 'Sfondo e testo del campo di ricerca nella testata di Devices.',
+    nome: 'Search bar',
+    descrizione: 'Background and text of the search field in the Devices header.',
     slots: ['sfondo', 'primoPiano'],
     cssVar: { sfondo: '--search-bg', primoPiano: '--search-text' },
     defaultChiaro: { sfondo: '#ffffff', primoPiano: '#333333' },
@@ -145,8 +145,8 @@ const COLOR_COMPONENTS = [
   {
     id: 'pulsanteNuovoDevice',
     categoria: 'Finestra e tabella',
-    nome: 'Pulsante "Nuovo Device"',
-    descrizione: 'Sfondo e testo del pulsante per aggiungere un dispositivo, nella testata di Devices.',
+    nome: 'Button "New Device"',
+    descrizione: 'Background and text of the button to add a device, in the Devices header.',
     slots: ['sfondo', 'primoPiano'],
     cssVar: { sfondo: '--add-device-btn-bg', primoPiano: '--add-device-btn-text' },
     defaultChiaro: { sfondo: '#0066cc', primoPiano: '#ffffff' },

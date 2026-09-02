@@ -33,7 +33,7 @@ function setConnStatusIcon(el, connected, fallbackText) {
   el.innerHTML = '';
   const img = document.createElement('img');
   img.src = `./img/conn-status/${state}-${APP_DEVICE_KIND}.png?v=${CONN_STATUS_ICON_VERSION}`;
-  img.alt = connected ? 'Connesso a OneDrive' : 'Non connesso a OneDrive';
+  img.alt = connected ? 'Connected to OneDrive' : 'Not connected to OneDrive';
   img.title = fallbackText;
   img.className = 'conn-status-icon';
   el.appendChild(img);

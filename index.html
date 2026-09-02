@@ -1,29 +1,29 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Home</title>
-  <link rel="stylesheet" href="./css/theme.css?v=35">
+  <link rel="stylesheet" href="./css/theme.css?v=43">
   <script src="./js/vendor/msal-browser.min.js"></script>
-  <script src="./js/storage/StorageProvider.js?v=33" defer></script>
-  <script src="./js/storage/OneDriveProvider.js?v=33" defer></script>
+  <script src="./js/storage/StorageProvider.js?v=34" defer></script>
+  <script src="./js/storage/OneDriveProvider.js?v=34" defer></script>
   <script src="./js/storage/config.js?v=33" defer></script>
   <script src="./js/app-storage.js?v=33" defer></script>
-  <script src="./js/device-status-icon.js?v=33" defer></script>
-  <script src="./js/devices/lookups.js?v=33" defer></script>
+  <script src="./js/device-status-icon.js?v=34" defer></script>
+  <script src="./js/devices/lookups.js?v=34" defer></script>
   <script src="./js/devices/hostname.js?v=33" defer></script>
-  <script src="./js/devices/DevicesStore.js?v=39" defer></script>
+  <script src="./js/devices/DevicesStore.js?v=42" defer></script>
   <script src="./js/devices/ColumnWidthStore.js?v=33" defer></script>
-  <script src="./js/tables/TablesStore.js?v=39" defer></script>
-  <script src="./js/tables/tables-ui.js?v=39" defer></script>
-  <script src="./js/devices/devices-ui.js?v=39" defer></script>
+  <script src="./js/tables/TablesStore.js?v=42" defer></script>
+  <script src="./js/tables/tables-ui.js?v=41" defer></script>
+  <script src="./js/devices/devices-ui.js?v=43" defer></script>
   <script src="./js/config/ConfigStore.js?v=33" defer></script>
-  <script src="./js/config/color-components.js?v=33" defer></script>
+  <script src="./js/config/color-components.js?v=34" defer></script>
   <script src="./js/config/ColorStore.js?v=33" defer></script>
-  <script src="./js/config/colori-ui.js?v=33" defer></script>
-  <script src="./js/config/backup-ui.js?v=33" defer></script>
-  <script src="./js/app.js?v=33" defer></script>
+  <script src="./js/config/colori-ui.js?v=34" defer></script>
+  <script src="./js/config/backup-ui.js?v=34" defer></script>
+  <script src="./js/app.js?v=34" defer></script>
 
   <!-- NOTA PER LO SVILUPPO: incrementare il numero "v" sopra ad ogni pubblicazione che
        modifica un file .js/.css locale, per evitare che i browser (specialmente Safari
@@ -41,7 +41,7 @@
         </li>
         <li class="sidebar-item" data-section="tabelle">
           <span class="icon">📋</span>
-          <span>Tabelle</span>
+          <span>Tables</span>
         </li>
         <li class="sidebar-item" data-section="config">
           <span class="icon">⚙️</span>
@@ -57,17 +57,20 @@
             <h1>Devices</h1>
             <div class="page-header-conn">
               <div id="devicesConnStatus"></div>
-              <button class="btn edit" id="btnDevicesConnect">Connetti</button>
-              <button class="btn edit" id="btnDevicesDisconnect" style="display:none;">Disconnetti</button>
+              <button class="btn edit" id="btnDevicesConnect">Connect</button>
+              <button class="btn edit" id="btnDevicesDisconnect" style="display:none;">Disconnect</button>
             </div>
           </div>
 
           <div class="toolbar-grid">
             <div class="toolbar-search">
-              <input class="search" id="devicesSearch" placeholder="🔍 Cerca per Nickname, Marca, Host Name, IP...">
+              <input class="search" id="devicesSearch" placeholder="🔍 Search by Nickname, Brand, Host Name, IP...">
             </div>
             <div class="toolbar-btn" style="display:flex; gap:10px;">
-              <button class="btn devices-add-btn" id="btnDeviceNew" style="display:none;">Nuovo Device</button>
+              <button class="btn devices-add-btn" id="btnDeviceNew" style="display:none;">
+                <img src="./img/new-device-icon.png?v=3" class="devices-add-btn-icon" alt="">
+                New
+              </button>
             </div>
           </div>
 
@@ -80,22 +83,22 @@
               <tbody id="devicesTableBody"></tbody>
             </table>
           </div>
-          <p class="placeholder" id="devicesEmptyMessage">Nessun dispositivo. Connettiti a OneDrive per iniziare.</p>
+          <p class="placeholder" id="devicesEmptyMessage">No devices. Connect to OneDrive to get started.</p>
         </div>
       </section>
 
       <section id="section-tabelle" class="section-view">
         <div class="win">
           <div class="page-header-row">
-            <h1>Tabelle</h1>
+            <h1>Tables</h1>
             <div class="page-header-conn">
               <div id="tabelleConnStatus"></div>
-              <button class="btn edit" id="btnTabelleConnect">Connetti</button>
-              <button class="btn edit" id="btnTabelleDisconnect" style="display:none;">Disconnetti</button>
+              <button class="btn edit" id="btnTabelleConnect">Connect</button>
+              <button class="btn edit" id="btnTabelleDisconnect" style="display:none;">Disconnect</button>
             </div>
           </div>
 
-          <p class="placeholder" id="tabelleConnectPlaceholder">Connettiti a OneDrive per gestire le tabelle di supporto.</p>
+          <p class="placeholder" id="tabelleConnectPlaceholder">Connect to OneDrive to manage the support tables.</p>
 
           <div id="tabelleTabsArea" style="display:none;">
             <div class="dlg-tabs" id="tabelleTabsBar"></div>
@@ -110,25 +113,25 @@
             <h1>Config</h1>
             <div class="page-header-conn">
               <div id="configConnStatus"></div>
-              <button class="btn edit" id="btnConfigConnect">Connetti</button>
-              <button class="btn edit" id="btnConfigDisconnect" style="display:none;">Disconnetti</button>
+              <button class="btn edit" id="btnConfigConnect">Connect</button>
+              <button class="btn edit" id="btnConfigDisconnect" style="display:none;">Disconnect</button>
             </div>
           </div>
 
-          <p class="placeholder" id="configConnectPlaceholder">Connettiti a OneDrive per gestire Backup &amp; Restore e Colori.</p>
+          <p class="placeholder" id="configConnectPlaceholder">Connect to OneDrive to manage Backup &amp; Restore and Colors.</p>
 
           <div id="configTabsArea" style="display:none;">
             <div class="dlg-tabs">
               <button type="button" class="tab-btn active" data-config-tab="ctab-backup">Backup &amp; Restore</button>
-              <button type="button" class="tab-btn" data-config-tab="ctab-colori">Colori</button>
+              <button type="button" class="tab-btn" data-config-tab="ctab-colori">Colors</button>
             </div>
 
             <div id="ctab-backup" class="config-tab-content active">
-              <p style="font-size:13px; color:#666; margin-top:0;">Esporta uno snapshot di Devices e Colori in un file JSON locale, o ripristina da un backup precedente.</p>
+              <p style="font-size:13px; color:#666; margin-top:0;">Export a snapshot of Devices and Colors to a local JSON file, or restore from a previous backup.</p>
               <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                <button class="btn btn-primary-add" id="btnBackupDownload">📥 Scarica Backup</button>
+                <button class="btn btn-primary-add" id="btnBackupDownload">📥 Download Backup</button>
                 <label class="btn edit" style="cursor:pointer;">
-                  📤 Ripristina da file…
+                  📤 Restore from file…
                   <input type="file" id="inputRestoreFile" accept="application/json" style="display:none;">
                 </label>
               </div>
@@ -136,26 +139,26 @@
             </div>
 
             <div id="ctab-colori" class="config-tab-content">
-              <p style="font-size:13px; color:var(--text-secondary); margin-top:0;">Scena "Finestra e tabella" — passa il mouse su uno swatch per sapere dove viene usato.</p>
+              <p style="font-size:13px; color:var(--text-secondary); margin-top:0;">"Window and table" scene — hover over a swatch to see where it's used.</p>
 
-              <h2 style="font-size:15px; margin-bottom:12px;">Insieme: Finestra e tabella</h2>
+              <h2 style="font-size:15px; margin-bottom:12px;">Set: Window and table</h2>
 
               <div class="colori-scene-tema">
-                <div class="colori-tema-label">Chiaro</div>
+                <div class="colori-tema-label">Light</div>
                 <div id="colori-tema-chiaro-preview"></div>
                 <div id="colori-tema-chiaro-swatches" class="colori-swatch-grid"></div>
               </div>
 
               <div class="colori-scene-tema">
-                <div class="colori-tema-label">Scuro</div>
+                <div class="colori-tema-label">Dark</div>
                 <div id="colori-tema-scuro-preview"></div>
                 <div id="colori-tema-scuro-swatches" class="colori-swatch-grid"></div>
               </div>
 
               <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="btn btn-primary-add" id="btnColoriSave">💾 Salva</button>
-                <button class="btn edit" id="btnColoriResetChiaro">🔄 Ripristina predefiniti (Chiaro)</button>
-                <button class="btn edit" id="btnColoriResetScuro">🔄 Ripristina predefiniti (Scuro)</button>
+                <button class="btn btn-primary-add" id="btnColoriSave">💾 Save</button>
+                <button class="btn edit" id="btnColoriResetChiaro">🔄 Reset defaults (Light)</button>
+                <button class="btn edit" id="btnColoriResetScuro">🔄 Reset defaults (Dark)</button>
               </div>
               <p id="coloriSaveStatus" style="font-size:13px; color:var(--text-secondary); margin-top:10px;"></p>
             </div>
@@ -168,14 +171,14 @@
   <!-- EDITOR DEVICE (Nuovo / Modifica) -->
   <dialog id="deviceDlg">
     <div class="dh">
-      <h2 id="deviceDlgTitle">Nuovo Dispositivo</h2>
+      <h2 id="deviceDlgTitle">New Device</h2>
     </div>
 
     <div class="dlg-tabs">
-      <button type="button" class="tab-btn active" data-tab="dtab-gen">Generale</button>
-      <button type="button" class="tab-btn" data-tab="dtab-net">Rete &amp; Connettività</button>
-      <button type="button" class="tab-btn" data-tab="dtab-cfg">Configurazione &amp; Gruppi</button>
-      <button type="button" class="tab-btn" data-tab="dtab-stat">Stato &amp; Note</button>
+      <button type="button" class="tab-btn active" data-tab="dtab-gen">General</button>
+      <button type="button" class="tab-btn" data-tab="dtab-net">Network &amp; Connectivity</button>
+      <button type="button" class="tab-btn" data-tab="dtab-cfg">Configuration &amp; Groups</button>
+      <button type="button" class="tab-btn" data-tab="dtab-stat">Status &amp; Notes</button>
     </div>
 
     <div id="dtab-gen" class="tab-content active">
@@ -184,33 +187,37 @@
         <input type="text" id="devNickname">
       </div>
       <div class="dlg-form-group">
-        <label for="devMarca">Marca</label>
+        <label for="devMarca">Brand</label>
         <select id="devMarca"></select>
       </div>
       <div class="dlg-form-group">
-        <label for="devModello">Modello</label>
+        <label for="devModello">Model</label>
         <input type="text" id="devModello">
       </div>
       <div class="dlg-form-group">
-        <label for="devTipoDispositivo">Tipo dispositivo</label>
+        <label for="devTipoDispositivo">Device type</label>
         <select id="devTipoDispositivo"></select>
       </div>
       <div class="dlg-form-group">
         <label for="devManagingApp">Managing App</label>
         <select id="devManagingApp"></select>
       </div>
-      <div class="dlg-form-group">
-        <label for="devPhisicalHub">Phisical Hub</label>
+      <div class="dlg-form-group row-start">
+        <label for="devPhisicalHub">Connection Hub</label>
         <select id="devPhisicalHub"></select>
       </div>
       <div class="dlg-form-group">
-        <label for="devProtocolloConnessione">Protocollo di Connessione</label>
+        <label for="devConnectedTo">Connected to</label>
+        <select id="devConnectedTo"></select>
+      </div>
+      <div class="dlg-form-group">
+        <label for="devProtocolloConnessione">Connection Protocol</label>
         <select id="devProtocolloConnessione"></select>
       </div>
       <div class="dlg-form-group full-width">
-        <label>Protocolli supportati</label>
+        <label>Supported protocols</label>
         <div id="devProtocolliList"></div>
-        <button type="button" class="btn edit" id="btnAddProtocollo" style="margin-top:6px; align-self:flex-start;">+ Aggiungi protocollo</button>
+        <button type="button" class="btn edit" id="btnAddProtocollo" style="margin-top:6px; align-self:flex-start;">+ Add protocol</button>
       </div>
     </div>
 
@@ -224,18 +231,14 @@
         <input type="text" id="devConnSpeed">
       </div>
       <div class="dlg-form-group">
-        <label for="devConnectedTo">Connected to</label>
-        <select id="devConnectedTo"></select>
-      </div>
-      <div class="dlg-form-group full-width">
-        <label>Host Name (generato automaticamente)</label>
+        <label>Host Name (automatic)</label>
         <input type="text" id="devHostNamePreview" readonly>
       </div>
       <div class="dlg-form-group full-width">
-        <label>Connessioni (IP) — di norma una sola, più di una solo per dispositivi con più interfacce di rete</label>
+        <label>Connections (IP) — usually just one, more than one only for devices with multiple network interfaces</label>
         <p id="devIpGroupHint" class="tabelle-hostname-note" style="display:none;"></p>
         <div id="devConnectionsList"></div>
-        <button type="button" class="btn edit" id="btnAddConnection" style="margin-top:6px; align-self:flex-start;">+ Aggiungi connessione</button>
+        <button type="button" class="btn edit" id="btnAddConnection" style="margin-top:6px; align-self:flex-start;">+ Add connection</button>
       </div>
     </div>
 
@@ -264,38 +267,38 @@
 
     <div id="dtab-stat" class="tab-content">
       <div class="dlg-form-group">
-        <label for="devAvanzamento">Avanzamento</label>
+        <label for="devAvanzamento">Progress</label>
         <select id="devAvanzamento"></select>
       </div>
       <div class="dlg-form-group">
-        <label for="devDisponibile">Disponibile ora?</label>
-        <label class="toolbar-chk"><input type="checkbox" id="devDisponibile"> Sì</label>
+        <label for="devDisponibile">Available now?</label>
+        <label class="toolbar-chk"><input type="checkbox" id="devDisponibile"> Yes</label>
       </div>
 
       <div class="dlg-form-group full-width">
-        <label>Collegato a Homey?</label>
+        <label>Connected to Homey?</label>
         <div class="bool-note-row">
-          <label class="toolbar-chk"><input type="checkbox" id="devHomey"> Sì</label>
-          <input type="text" id="devHomeyNote" placeholder="Note (es. con Alexa)">
+          <label class="toolbar-chk"><input type="checkbox" id="devHomey"> Yes</label>
+          <input type="text" id="devHomeyNote" placeholder="Notes (e.g. with Alexa)">
         </div>
       </div>
       <div class="dlg-form-group full-width">
-        <label>Integrato in HomeKit?</label>
+        <label>Integrated in HomeKit?</label>
         <div class="bool-note-row">
-          <label class="toolbar-chk"><input type="checkbox" id="devHomeKit"> Sì</label>
-          <input type="text" id="devHomeKitNote" placeholder="Note">
+          <label class="toolbar-chk"><input type="checkbox" id="devHomeKit"> Yes</label>
+          <input type="text" id="devHomeKitNote" placeholder="Notes">
         </div>
       </div>
       <div class="dlg-form-group full-width">
-        <label>Usato in automazioni?</label>
+        <label>Used in automations?</label>
         <div class="bool-note-row">
-          <label class="toolbar-chk"><input type="checkbox" id="devAutomazioni"> Sì</label>
-          <input type="text" id="devAutomazioniNote" placeholder="Note">
+          <label class="toolbar-chk"><input type="checkbox" id="devAutomazioni"> Yes</label>
+          <input type="text" id="devAutomazioniNote" placeholder="Notes">
         </div>
       </div>
 
       <div class="dlg-form-group full-width">
-        <label for="devNote">Note</label>
+        <label for="devNote">Notes</label>
         <textarea id="devNote" rows="3"></textarea>
       </div>
     </div>
@@ -303,19 +306,19 @@
     <div id="deviceDlgConflicts" class="conflicts-box" style="display:none;"></div>
 
     <div class="foot">
-      <button type="button" class="btn pow" id="btnDeviceCancel">❌ Annulla</button>
-      <button type="button" class="btn btn-primary-add" id="btnDeviceSave">💾 Salva</button>
+      <button type="button" class="btn pow" id="btnDeviceCancel">❌ Cancel</button>
+      <button type="button" class="btn btn-primary-add" id="btnDeviceSave">💾 Save</button>
     </div>
   </dialog>
 
   <!-- MODIFICHE NON SALVATE — stesso pattern a 3 opzioni di Incarichi/Oratori -->
   <dialog id="unsavedChangesDlg" class="alert-dlg">
-    <h2>Modifiche non salvate</h2>
+    <h2>Unsaved changes</h2>
     <p id="unsavedChangesMessage"></p>
     <div class="alert-dlg-actions">
-      <button type="button" class="btn btn-primary-add" id="btnUnsavedSaveAndGo">Salva e vai</button>
-      <button type="button" class="btn edit" id="btnUnsavedDiscardAndGo">Non salvare e vai</button>
-      <button type="button" class="btn edit" id="btnUnsavedStay">Resta qui</button>
+      <button type="button" class="btn btn-primary-add" id="btnUnsavedSaveAndGo">Save and go</button>
+      <button type="button" class="btn edit" id="btnUnsavedDiscardAndGo">Don't save and go</button>
+      <button type="button" class="btn edit" id="btnUnsavedStay">Stay here</button>
     </div>
   </dialog>
 

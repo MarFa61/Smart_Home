@@ -79,7 +79,7 @@ class OneDriveProvider extends StorageProvider {
   }
 
   async _getAccessToken() {
-    if (!this._account) throw new Error('Non connesso a OneDrive: chiamare connect() prima.');
+    if (!this._account) throw new Error('Not connected to OneDrive: call connect() first.');
     try {
       const result = await this._msalApp.acquireTokenSilent({
         scopes: this._scopes,
@@ -114,13 +114,13 @@ class OneDriveProvider extends StorageProvider {
       return { data: null, version: null };
     }
     if (!metaResponse.ok) {
-      throw new Error(`Errore nel caricamento di "${resourceKey}" (HTTP ${metaResponse.status}).`);
+      throw new Error(`Error loading "${resourceKey}" (HTTP ${metaResponse.status}).`);
     }
     const meta = await metaResponse.json();
 
     const contentResponse = await fetch(this._contentUrl(resourceKey), { headers: authHeader });
     if (!contentResponse.ok) {
-      throw new Error(`Errore nel caricamento di "${resourceKey}" (HTTP ${contentResponse.status}).`);
+      throw new Error(`Error loading "${resourceKey}" (HTTP ${contentResponse.status}).`);
     }
     const data = await contentResponse.json();
 
@@ -147,7 +147,7 @@ class OneDriveProvider extends StorageProvider {
       throw new StorageConflictError(resourceKey);
     }
     if (!response.ok) {
-      throw new Error(`Errore nel salvataggio di "${resourceKey}" (HTTP ${response.status}).`);
+      throw new Error(`Error saving "${resourceKey}" (HTTP ${response.status}).`);
     }
 
     // Come per load(): la versione aggiornata arriva nel corpo JSON del driveItem, non negli header.

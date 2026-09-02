@@ -1,6 +1,6 @@
 /* =========================================================
    TABELLE DI SUPPORTO NON ANCORA IN "Tabelle" (TEMPORANEE)
-   Avanzamento, Tipo dispositivo, Protocollo, Phisical Hub,
+   Avanzamento, Tipo dispositivo, Marca, Protocollo,
    Managing App, SSID, Categoria, Zona, Tipo sono ora gestiti
    dalla sezione Tabelle (vedi js/tables/TablesStore.js, che
    riusa DEV_CATEGORIES/DEV_ZONES/DEV_TYPES qui sotto come

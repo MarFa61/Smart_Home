@@ -47,7 +47,7 @@ function discardColoriChanges() {
 
 function checkColoriUnsavedChanges() {
   if (!coloriIsDirty()) return null;
-  return { message: 'Ci sono modifiche non salvate in Colori.', save: saveColori, discard: discardColoriChanges };
+  return { message: 'There are unsaved changes in Colors.', save: saveColori, discard: discardColoriChanges };
 }
 
 /** Ritorna true se il salvataggio è andato a buon fine, false altrimenti — usato sia
@@ -56,13 +56,13 @@ async function saveColori() {
   try {
     await colorStore.save();
     snapshotColoriBaseline();
-    document.getElementById('coloriSaveStatus').textContent = 'Salvato.';
+    document.getElementById('coloriSaveStatus').textContent = 'Saved.';
     return true;
   } catch (error) {
     if (error.name === 'StorageConflictError') {
-      document.getElementById('coloriSaveStatus').textContent = 'Conflitto: la configurazione è cambiata altrove. Ricarica la pagina.';
+      document.getElementById('coloriSaveStatus').textContent = 'Conflict: configuration changed elsewhere. Reload the page.';
     } else {
-      document.getElementById('coloriSaveStatus').textContent = `Errore: ${error.message}`;
+      document.getElementById('coloriSaveStatus').textContent = `Error: ${error.message}`;
     }
     return false;
   }
@@ -90,7 +90,7 @@ function previewMarkup(tema) {
         <div class="colori-preview-title" style="color:${v('titoloPagina', 'primoPiano')};">Devices</div>
         <div class="colori-preview-card" style="background:${v('sfondoCard', 'sfondo')};">
           <div class="colori-preview-thead" style="background:${v('sfondoIntestazioneTabella', 'sfondo')}; color:${v('testoIntestazioneTabella', 'primoPiano')};">
-            <span>Nickname</span><span>Marca</span><span>IP</span>
+            <span>Nickname</span><span>Brand</span><span>IP</span>
           </div>
           <div class="colori-preview-row" style="color:${v('testoPrincipale', 'primoPiano')}; border-bottom:1px solid ${v('dividerRigaTabella', 'primoPiano')};">
             <span>Router-Main</span><span>NetGear</span><span>10.0.0.1</span>
@@ -99,7 +99,7 @@ function previewMarkup(tema) {
             <span>Sonoff Studio</span><span>Sonoff</span><span>10.0.0.132</span>
           </div>
           <div class="colori-preview-row" style="color:${v('testoSecondario', 'primoPiano')};">
-            <span colspan="3">Nessun altro dispositivo</span>
+            <span colspan="3">No other device</span>
           </div>
         </div>
       </div>
@@ -111,7 +111,7 @@ function swatchGridMarkup(tema) {
   return SCENE_FINESTRA_TABELLA.map(component => component.slots.map(slot => {
     const inputId = `swatch-${component.id}-${tema}-${slot}`;
     const label = component.slots.length > 1
-      ? `${component.nome} — ${slot === 'sfondo' ? 'sfondo' : 'testo'}`
+      ? `${component.nome} — ${slot === 'sfondo' ? 'background' : 'text'}`
       : component.nome;
     return `
       <div class="colori-swatch" title="${component.descrizione}">
@@ -160,7 +160,7 @@ async function loadAndShowConfig() {
   // senza mai passare da Devices, esporterebbe un elenco dispositivi vuoto).
   if (devicesStore.devices.length === 0) await devicesStore.load();
 
-  setConnStatusIcon(document.getElementById('configConnStatus'), true, `Connesso a OneDrive (${appStorage.connectedAccountEmail()}).`);
+  setConnStatusIcon(document.getElementById('configConnStatus'), true, `Connected to OneDrive (${appStorage.connectedAccountEmail()}).`);
   document.getElementById('btnConfigConnect').style.display = 'none';
   document.getElementById('btnConfigDisconnect').style.display = 'inline-block';
   document.getElementById('configConnectPlaceholder').style.display = 'none';
@@ -169,7 +169,7 @@ async function loadAndShowConfig() {
 
 document.addEventListener('DOMContentLoaded', () => {
   registerUnsavedChangesChecker(checkColoriUnsavedChanges);
-  setConnStatusIcon(document.getElementById('configConnStatus'), false, 'Non connesso a OneDrive.');
+  setConnStatusIcon(document.getElementById('configConnStatus'), false, 'Not connected to OneDrive.');
 
   document.querySelectorAll('#section-config .tab-btn').forEach(btn => {
     btn.addEventListener('click', () => switchConfigTab(btn.dataset.configTab));
@@ -177,17 +177,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btnConfigConnect').addEventListener('click', async () => {
     try {
-      document.getElementById('configConnStatus').textContent = 'Connessione in corso…';
+      document.getElementById('configConnStatus').textContent = 'Connecting…';
       await appStorage.connect();
       await loadAndShowConfig();
     } catch (error) {
-      document.getElementById('configConnStatus').textContent = `Errore di connessione: ${error.message}`;
+      document.getElementById('configConnStatus').textContent = `Connection error: ${error.message}`;
     }
   });
 
   document.getElementById('btnConfigDisconnect').addEventListener('click', async () => {
     await appStorage.disconnect();
-    setConnStatusIcon(document.getElementById('configConnStatus'), false, 'Non connesso a OneDrive.');
+    setConnStatusIcon(document.getElementById('configConnStatus'), false, 'Not connected to OneDrive.');
     document.getElementById('btnConfigConnect').style.display = 'inline-block';
     document.getElementById('btnConfigDisconnect').style.display = 'none';
     document.getElementById('configTabsArea').style.display = 'none';
@@ -203,14 +203,14 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       await colorStore.save();
       snapshotColoriBaseline();
-      document.getElementById('coloriSaveStatus').textContent = `Ripristinati i colori predefiniti (${label}).`;
+      document.getElementById('coloriSaveStatus').textContent = `Default colors restored (${label}).`;
     } catch (error) {
-      document.getElementById('coloriSaveStatus').textContent = `Errore: ${error.message}`;
+      document.getElementById('coloriSaveStatus').textContent = `Error: ${error.message}`;
     }
   }
 
-  document.getElementById('btnColoriResetChiaro').addEventListener('click', () => resetTemaEShow('chiaro', 'Chiaro'));
-  document.getElementById('btnColoriResetScuro').addEventListener('click', () => resetTemaEShow('scuro', 'Scuro'));
+  document.getElementById('btnColoriResetChiaro').addEventListener('click', () => resetTemaEShow('chiaro', 'Light'));
+  document.getElementById('btnColoriResetScuro').addEventListener('click', () => resetTemaEShow('scuro', 'Dark'));
 
   // Connessione automatica: se una sessione OneDrive era già attiva (anche stabilita
   // da un'altra sezione), si salta il pulsante "Connetti" e si carica direttamente.

@@ -30,21 +30,21 @@ function escapeHtml(str) {
 const DEVICES_COLUMNS = [
   { id: 'nickname', title: 'Nickname', sticky: true, filterable: false, defaultWidth: 170,
     value: d => d.nickname || '', render: d => escapeHtml(d.nickname || '') },
-  { id: 'marca', title: 'Marca', filterable: true, defaultWidth: 110,
+  { id: 'marca', title: 'Brand', filterable: true, defaultWidth: 110,
     value: d => d.marca || '', render: d => escapeHtml(d.marca || '') },
-  { id: 'modello', title: 'Modello', filterable: false, defaultWidth: 150,
+  { id: 'modello', title: 'Model', filterable: false, defaultWidth: 150,
     value: d => d.modello || '', render: d => escapeHtml(d.modello || '') },
-  { id: 'avanzamento', title: 'Avanzamento', filterable: true, defaultWidth: 130,
+  { id: 'avanzamento', title: 'Progress', filterable: true, defaultWidth: 130,
     value: d => d.avanzamento || '', render: d => escapeHtml(d.avanzamento || '') },
-  { id: 'tipoDispositivo', title: 'Tipo dispositivo', filterable: false, defaultWidth: 140,
+  { id: 'tipoDispositivo', title: 'Device type', filterable: false, defaultWidth: 140,
     value: d => d.tipoDispositivo || '', render: d => escapeHtml(d.tipoDispositivo || '') },
-  { id: 'protocollo', title: 'Protocollo', filterable: true, defaultWidth: 130,
+  { id: 'protocollo', title: 'Protocol', filterable: true, defaultWidth: 130,
     value: d => d.protocolloConnessione || '', render: d => escapeHtml(d.protocolloConnessione || '') },
-  { id: 'phisicalHub', title: 'Phisical Hub', filterable: true, defaultWidth: 140,
+  { id: 'phisicalHub', title: 'Connection Hub', filterable: true, defaultWidth: 140,
     value: d => d.phisicalHub || '', render: d => escapeHtml(d.phisicalHub || '') },
   { id: 'managingApp', title: 'Managing App', filterable: false, defaultWidth: 130,
     value: d => d.managingApp || '', render: d => escapeHtml(d.managingApp || '') },
-  { id: 'homey', title: 'Collegato a Homey', filterable: true, defaultWidth: 100,
+  { id: 'homey', title: 'Connected to Homey', filterable: true, defaultWidth: 100,
     value: d => !!d.collegatoHomey, render: d => boolBadge(d.collegatoHomey) },
   { id: 'ssid', title: 'SSID', filterable: false, defaultWidth: 120,
     value: d => d.ssid || '', render: d => escapeHtml(d.ssid || '') },
@@ -54,11 +54,11 @@ const DEVICES_COLUMNS = [
     value: d => d.connectionSpeed || '', render: d => escapeHtml(d.connectionSpeed || '') },
   { id: 'devGroup', title: 'Dev. Group', filterable: true, defaultWidth: 110,
     value: d => d.devGroup || '', render: d => escapeHtml(d.devGroup || '') },
-  { id: 'devCategory', title: 'Categoria', filterable: true, defaultWidth: 100,
+  { id: 'devCategory', title: 'Category', filterable: true, defaultWidth: 100,
     value: d => d.devCategory || '', render: d => escapeHtml(d.devCategory || '') },
-  { id: 'devZone', title: 'Zona', filterable: true, defaultWidth: 100,
+  { id: 'devZone', title: 'Zone', filterable: true, defaultWidth: 100,
     value: d => d.devZone || '', render: d => escapeHtml(d.devZone || '') },
-  { id: 'devType', title: 'Tipo', filterable: true, defaultWidth: 90,
+  { id: 'devType', title: 'Type', filterable: true, defaultWidth: 90,
     value: d => d.devType || '', render: d => escapeHtml(d.devType || '') },
   { id: 'devId', title: 'Dev. Id.', filterable: false, defaultWidth: 90,
     value: d => d.devId || '', render: d => escapeHtml(d.devId || '') },
@@ -70,16 +70,36 @@ const DEVICES_COLUMNS = [
     render: d => escapeHtml((d.connections || []).map(c => c.ip).filter(Boolean).join(', ')) },
   { id: 'homekit', title: 'HomeKit', filterable: true, defaultWidth: 85,
     value: d => !!d.integratoHomeKit, render: d => boolBadge(d.integratoHomeKit) },
-  { id: 'automazioni', title: 'Automazioni', filterable: true, defaultWidth: 100,
+  { id: 'automazioni', title: 'Automations', filterable: true, defaultWidth: 100,
     value: d => !!d.usatoAutomazioni, render: d => boolBadge(d.usatoAutomazioni) },
-  { id: 'disponibile', title: 'Disponibile', filterable: true, defaultWidth: 95,
+  { id: 'disponibile', title: 'Available', filterable: true, defaultWidth: 95,
     value: d => !!d.disponibileOra, render: d => boolBadge(d.disponibileOra) },
-  { id: 'note', title: 'Note', filterable: false, defaultWidth: 220,
+  { id: 'note', title: 'Notes', filterable: false, defaultWidth: 220,
     value: d => d.note || '', render: d => escapeHtml(d.note || '') },
 ];
 
-let sortColumnId = 'nickname';
-let sortDirection = 'asc';
+// Ordinamento persistito in localStorage (preferenza del browser/device, come le
+// larghezze colonna in ColumnWidthStore, non dato business: non va su OneDrive) —
+// altrimenti si perdeva ad ogni ricaricamento della pagina.
+const DEVICES_SORT_KEY = 'devicesSort';
+function loadDevicesSort() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(DEVICES_SORT_KEY));
+    if (saved && DEVICES_COLUMNS.some(c => c.id === saved.columnId)) {
+      return { columnId: saved.columnId, direction: saved.direction === 'desc' ? 'desc' : 'asc' };
+    }
+  } catch (e) { /* localStorage non disponibile: si parte dal default */ }
+  return { columnId: 'nickname', direction: 'asc' };
+}
+function saveDevicesSort() {
+  try {
+    localStorage.setItem(DEVICES_SORT_KEY, JSON.stringify({ columnId: sortColumnId, direction: sortDirection }));
+  } catch (e) { /* localStorage non disponibile: l'ordinamento resta solo per questa sessione */ }
+}
+
+const _initialDevicesSort = loadDevicesSort();
+let sortColumnId = _initialDevicesSort.columnId;
+let sortDirection = _initialDevicesSort.direction;
 const columnFilters = {}; // columnId -> Set di valori visualizzati ammessi (assente = nessun filtro)
 let openFilterColumnId = null;
 
@@ -91,8 +111,8 @@ function compareValues(a, b) {
 }
 
 function displayValueForFilter(rawValue) {
-  if (typeof rawValue === 'boolean') return rawValue ? 'Sì' : 'No';
-  return rawValue || '(vuoto)';
+  if (typeof rawValue === 'boolean') return rawValue ? 'Yes' : 'No';
+  return rawValue || '(empty)';
 }
 
 function renderDevicesHeader() {
@@ -136,6 +156,7 @@ function renderDevicesHeader() {
         sortColumnId = col.id;
         sortDirection = 'asc';
       }
+      saveDevicesSort();
       renderDevicesHeader();
       renderDevicesTable();
     });
@@ -155,7 +176,7 @@ function renderDevicesHeader() {
       // Icona a imbuto (SVG, non carattere Unicode: indipendente dal supporto font del
       // sistema), più riconoscibile e visibile della precedente freccina sottile.
       filterBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 14 14"><polygon points="12.5 2 1.5 2 6 7.5 6 11.5 8 12.5 8 7.5 12.5 2" fill="currentColor"/></svg>';
-      filterBtn.title = 'Filtra questa colonna';
+      filterBtn.title = 'Filter this column';
       filterBtn.addEventListener('click', e => {
         e.stopPropagation();
         toggleFilterPopover(col, th);
@@ -178,7 +199,7 @@ function renderDevicesHeader() {
   colgroup.appendChild(actionsColEl);
   const actionsTh = document.createElement('th');
   actionsTh.className = 'sticky-actions';
-  actionsTh.textContent = 'Azioni';
+  actionsTh.textContent = 'Actions';
   headerRow.appendChild(actionsTh);
 }
 
@@ -221,9 +242,9 @@ function toggleFilterPopover(col, thEl) {
   popover.className = 'col-filter-popover';
   popover.innerHTML = `
     <div class="col-filter-actions">
-      <button type="button" class="btn edit" data-action="deselect-all">Deseleziona tutto</button>
-      <button type="button" class="btn edit" data-action="clear">Nessun filtro</button>
-      <button type="button" class="btn btn-primary-add" data-action="apply">Applica</button>
+      <button type="button" class="btn edit" data-action="deselect-all">Deselect all</button>
+      <button type="button" class="btn edit" data-action="clear">No filter</button>
+      <button type="button" class="btn btn-primary-add" data-action="apply">Apply</button>
     </div>
     <div class="col-filter-list">
       ${distinctValues.map(v => `
@@ -282,7 +303,7 @@ function populateSelect(selectEl, options, includeBlank) {
   if (includeBlank) {
     const blank = document.createElement('option');
     blank.value = '';
-    blank.textContent = '-- Seleziona --';
+    blank.textContent = '-- Select --';
     selectEl.appendChild(blank);
   }
   options.forEach(value => {
@@ -294,7 +315,7 @@ function populateSelect(selectEl, options, includeBlank) {
 }
 
 function boolBadge(value) {
-  return `<span class="badge ${value ? 'badge-yes' : 'badge-no'}">${value ? 'Sì' : 'No'}</span>`;
+  return `<span class="badge ${value ? 'badge-yes' : 'badge-no'}">${value ? 'Yes' : 'No'}</span>`;
 }
 
 function renderDevicesTable() {
@@ -341,8 +362,8 @@ function renderDevicesTable() {
       ${cellsHtml}
       <td class="sticky-actions">
         <div class="actions">
-          <button class="btn edit" title="Modifica" data-action="edit" data-id="${device.id}">✏️</button>
-          <button class="btn pow" title="Elimina" data-action="delete" data-id="${device.id}">🗑️</button>
+          <button class="btn edit" title="Edit" data-action="edit" data-id="${device.id}">✏️</button>
+          <button class="btn pow" title="Delete" data-action="delete" data-id="${device.id}">🗑️</button>
         </div>
       </td>
     `;
@@ -398,7 +419,7 @@ function showIpSuggestPopover(inputEl, allIps) {
   popover.setAttribute('popover', 'auto');
   popover.innerHTML = matches.length
     ? matches.map(ip => `<div class="ip-suggest-item" data-ip="${ip}">${ip}</div>`).join('')
-    : '<div class="ip-suggest-empty">Nessun IP libero nel blocco riservato</div>';
+    : '<div class="ip-suggest-empty">No free IP in the reserved block</div>';
   // pointerdown (non mousedown/click): è il primo evento della sequenza, prima che
   // il light-dismiss nativo del popover possa nasconderlo e far "cadere" il click
   // sull'elemento sottostante (es. il pulsante Aggiungi connessione).
@@ -430,7 +451,7 @@ function showIpSuggestPopover(inputEl, allIps) {
 function updateIpGroupHint() {
   const hint = document.getElementById('devIpGroupHint');
   if (!editingDevice.devGroup) {
-    hint.textContent = 'Imposta il Dev. Group (tab "Configurazione & Gruppi") per avere suggerimenti di IP liberi nel blocco riservato.';
+    hint.textContent = 'Set the Dev. Group (tab "Configuration & Groups") to get free IP suggestions within the reserved block.';
     hint.style.display = 'block';
   } else {
     hint.style.display = 'none';
@@ -446,7 +467,7 @@ function renderConnectionsList() {
   // lasciare che l'utente componga un IP fuori da qualsiasi blocco riservato.
   const locked = !editingDevice.devGroup;
   const availableIps = availableIpsForEditingDevice();
-  const ipPlaceholder = locked ? 'Imposta prima il Dev. Group' : 'Indirizzo IP';
+  const ipPlaceholder = locked ? 'Set the Dev. Group first' : 'IP address';
   // Freccina come nelle tendine native, solo quando ci sono davvero suggerimenti da
   // mostrare: segnala che il campo si può scegliere da un elenco, non solo digitare.
   const arrowSvg = '<svg class="conn-ip-arrow" width="8" height="8" viewBox="0 0 10 10"><path d="M1 3 L5 7 L9 3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -461,7 +482,7 @@ function renderConnectionsList() {
         <input type="text" placeholder="${ipPlaceholder}" class="conn-ip" value="${escapeHtml(conn.ip || '')}" autocomplete="off" ${locked ? 'disabled' : ''}>
         ${availableIps.length ? arrowSvg : ''}
       </div>
-      <input type="text" placeholder="Nota (es. Wi-Fi / Ethernet)" class="conn-note" value="${escapeHtml(conn.note || '')}" ${locked ? 'disabled' : ''}>
+      <input type="text" placeholder="Note (e.g. Wi-Fi / Ethernet)" class="conn-note" value="${escapeHtml(conn.note || '')}" ${locked ? 'disabled' : ''}>
       <button type="button" class="btn pow conn-remove">🗑️</button>
     `;
     const ipInput = row.querySelector('.conn-ip');
@@ -480,7 +501,7 @@ function renderConnectionsList() {
     row.querySelector('.conn-remove').addEventListener('click', () => {
       // Conferma solo se c'è davvero qualcosa da perdere: azione irreversibile,
       // ma su una riga già vuota non ha senso interrompere l'utente.
-      if ((conn.ip || conn.note) && !confirm('Eliminare questa connessione (IP e Nota)?')) return;
+      if ((conn.ip || conn.note) && !confirm('Delete this connection (IP and Note)?')) return;
       // Sull'unica riga rimasta non si può eliminare la riga stessa (ne deve
       // restare sempre almeno una): il cestino ne svuota invece il contenuto.
       if (editingDevice.connections.length <= 1) {
@@ -524,7 +545,7 @@ function renderProtocolliList() {
     removeBtn.className = 'btn pow';
     removeBtn.textContent = '🗑️';
     removeBtn.addEventListener('click', () => {
-      if (value && !confirm(`Rimuovere "${value}" dai protocolli supportati?`)) return;
+      if (value && !confirm(`Remove "${value}" from supported protocols?`)) return;
       editingDevice.protocolli.splice(index, 1);
       renderProtocolliList();
     });
@@ -548,13 +569,14 @@ function openDeviceDialog(device) {
   document.getElementById('deviceDlgConflicts').style.display = 'none';
 
   const isNew = !devicesStore.devices.some(d => d.id === device.id);
-  document.getElementById('deviceDlgTitle').textContent = isNew ? 'Nuovo Dispositivo' : `Modifica: ${device.nickname || '(senza nome)'}`;
+  document.getElementById('deviceDlgTitle').textContent = isNew ? 'New Device' : `Edit: ${device.nickname || '(no name)'}`;
 
   document.getElementById('devNickname').value = editingDevice.nickname;
   document.getElementById('devMarca').value = editingDevice.marca;
   document.getElementById('devModello').value = editingDevice.modello;
   document.getElementById('devTipoDispositivo').value = editingDevice.tipoDispositivo;
   document.getElementById('devManagingApp').value = editingDevice.managingApp;
+  populateSelect(document.getElementById('devPhisicalHub'), hubNicknameOptions(editingDevice.id), true);
   document.getElementById('devPhisicalHub').value = editingDevice.phisicalHub;
   document.getElementById('devProtocolloConnessione').value = editingDevice.protocolloConnessione;
   if (!Array.isArray(editingDevice.protocolli)) editingDevice.protocolli = [];
@@ -637,9 +659,9 @@ async function saveEditingDevice() {
     renderDevicesTable();
   } catch (error) {
     if (error.name === 'StorageConflictError') {
-      alert('I dati su OneDrive sono cambiati nel frattempo (probabilmente da un altro dispositivo). Ricarica la pagina e riprova.');
+      alert('Data on OneDrive changed in the meantime (probably from another device). Reload the page and try again.');
     } else {
-      alert(`Errore nel salvataggio: ${error.message}`);
+      alert(`Error saving: ${error.message}`);
     }
   }
 }
@@ -647,7 +669,7 @@ async function saveEditingDevice() {
 async function deleteDevice(id) {
   const device = devicesStore.devices.find(d => d.id === id);
   if (!device) return;
-  if (!confirm(`Eliminare "${device.nickname || device.id}"?`)) return;
+  if (!confirm(`Delete "${device.nickname || device.id}"?`)) return;
 
   devicesStore.remove(id);
   try {
@@ -655,11 +677,20 @@ async function deleteDevice(id) {
     renderDevicesTable();
   } catch (error) {
     if (error.name === 'StorageConflictError') {
-      alert('I dati su OneDrive sono cambiati nel frattempo. Ricarica la pagina e riprova.');
+      alert('Data on OneDrive changed in the meantime. Reload the page and try again.');
     } else {
-      alert(`Errore nel salvataggio: ${error.message}`);
+      alert(`Error saving: ${error.message}`);
     }
   }
+}
+
+// "Connection Hub": un hub è un device, quindi i valori scelgibili sono i nickname
+// degli altri device già presenti (un device non può essere hub di sé stesso).
+function hubNicknameOptions(excludeId) {
+  return devicesStore.devices
+    .filter(d => d.id !== excludeId && d.nickname)
+    .map(d => d.nickname)
+    .sort((a, b) => a.localeCompare(b, 'it', { numeric: true, sensitivity: 'base' }));
 }
 
 // Tendine alimentate da Tabelle (tablesStore): richiamata anche dopo un salvataggio
@@ -672,7 +703,8 @@ function populateDeviceFormSelects() {
   populateSelect(document.getElementById('devTipoDispositivo'), tablesStore.labels('tipoDispositivo'), true);
   populateSelect(document.getElementById('devMarca'), tablesStore.labels('marca'), true);
   populateSelect(document.getElementById('devProtocolloConnessione'), tablesStore.labels('protocollo'), true);
-  populateSelect(document.getElementById('devPhisicalHub'), tablesStore.labels('phisicalHub'), true);
+  // devPhisicalHub ("Connection Hub") non viene popolato qui: dipende dal device in
+  // modifica (esclude sé stesso), viene rifatto in openDeviceDialog().
   populateSelect(document.getElementById('devManagingApp'), tablesStore.labels('managingApp'), true);
   populateSelect(document.getElementById('devSSID'), tablesStore.labels('ssid'), true);
   populateSelect(document.getElementById('devGroup'), DEV_GROUPS, true);
@@ -681,7 +713,7 @@ function populateDeviceFormSelects() {
 
 document.addEventListener('DOMContentLoaded', () => {
   renderDevicesHeader();
-  setConnStatusIcon(devicesStatusEl(), false, 'Non connesso a OneDrive.');
+  setConnStatusIcon(devicesStatusEl(), false, 'Not connected to OneDrive.');
 
   populateDeviceFormSelects();
 
@@ -701,7 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newValidIps = newRange ? new Set(expandIpRange(newRange)) : null;
     const incompatible = editingDevice.connections.some(c => c.ip && (!newValidIps || !newValidIps.has(c.ip)));
 
-    if (incompatible && !confirm('Gli indirizzi IP impostati non appartengono al blocco del nuovo Dev. Group e verranno cancellati. Continuare?')) {
+    if (incompatible && !confirm('The IP addresses set do not belong to the new Dev. Group block and will be deleted. Continue?')) {
       e.target.value = oldGroup;
       return;
     }
@@ -753,11 +785,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btnDevicesConnect').addEventListener('click', async () => {
     try {
-      devicesStatusEl().textContent = 'Connessione in corso…';
+      devicesStatusEl().textContent = 'Connecting…';
       await appStorage.connect();
       await loadAndShowDevices();
     } catch (error) {
-      devicesStatusEl().textContent = `Errore di connessione: ${error.message}`;
+      devicesStatusEl().textContent = `Connection error: ${error.message}`;
     }
   });
 
@@ -765,7 +797,7 @@ document.addEventListener('DOMContentLoaded', () => {
     await appStorage.disconnect();
     devicesStore.devices = [];
     renderDevicesTable();
-    setConnStatusIcon(devicesStatusEl(), false, 'Non connesso a OneDrive.');
+    setConnStatusIcon(devicesStatusEl(), false, 'Not connected to OneDrive.');
     document.getElementById('btnDevicesConnect').style.display = 'inline-block';
     document.getElementById('btnDevicesDisconnect').style.display = 'none';
     document.getElementById('btnDeviceNew').style.display = 'none';
@@ -779,7 +811,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function loadAndShowDevices() {
-  setConnStatusIcon(devicesStatusEl(), true, `Connesso a OneDrive (${appStorage.connectedAccountEmail()}).`);
+  setConnStatusIcon(devicesStatusEl(), true, `Connected to OneDrive (${appStorage.connectedAccountEmail()}).`);
   document.getElementById('btnDevicesConnect').style.display = 'none';
   document.getElementById('btnDevicesDisconnect').style.display = 'inline-block';
   document.getElementById('btnDeviceNew').style.display = 'inline-block';

@@ -1,9 +1,13 @@
 /* =========================================================
    STORE PER LE TABELLE DI SUPPORTO (Avanzamento, Tipo
-   dispositivo, Protocollo, Phisical Hub, Managing App, SSID,
+   dispositivo, Marca, Protocollo, Managing App, SSID,
    Categoria, Zona, Tipo). Stessa logica di DevicesStore/
    ConfigStore: risorsa "tables.json" su OneDrive, concorrenza
    ottimistica via versione.
+
+   "Connection Hub" (ex "Phisical Hub") NON è più una di queste tabelle: i suoi valori
+   sono i nickname dei device già presenti in Devices (un hub è un device), popolati
+   direttamente da devicesStore in devices-ui.js, non da qui.
 
    Al primo utilizzo (nessun tables.json ancora salvato, o una
    singola tabella nuova non ancora presente in un tables.json
@@ -20,19 +24,18 @@
 // l'elenco "Protocolli supportati" (array, il valore può comparire in una qualsiasi
 // posizione) e il campo singolo "Protocollo di Connessione".
 const TABLE_DEFS = [
-  { id: 'avanzamento', title: 'Avanzamento', kind: 'label', devicesFields: [{ field: 'avanzamento', type: 'scalar' }] },
-  { id: 'tipoDispositivo', title: 'Tipo dispositivo', kind: 'label', devicesFields: [{ field: 'tipoDispositivo', type: 'scalar' }] },
-  { id: 'marca', title: 'Marca', kind: 'label', devicesFields: [{ field: 'marca', type: 'scalar' }] },
-  { id: 'protocollo', title: 'Protocollo', kind: 'label', devicesFields: [
+  { id: 'avanzamento', title: 'Progress', kind: 'label', devicesFields: [{ field: 'avanzamento', type: 'scalar' }] },
+  { id: 'tipoDispositivo', title: 'Device type', kind: 'label', devicesFields: [{ field: 'tipoDispositivo', type: 'scalar' }] },
+  { id: 'marca', title: 'Brand', kind: 'label', devicesFields: [{ field: 'marca', type: 'scalar' }] },
+  { id: 'protocollo', title: 'Protocol', kind: 'label', devicesFields: [
     { field: 'protocolli', type: 'array' },
     { field: 'protocolloConnessione', type: 'scalar' },
   ] },
-  { id: 'phisicalHub', title: 'Phisical Hub', kind: 'label', devicesFields: [{ field: 'phisicalHub', type: 'scalar' }] },
   { id: 'managingApp', title: 'Managing App', kind: 'label', devicesFields: [{ field: 'managingApp', type: 'scalar' }] },
   { id: 'ssid', title: 'SSID', kind: 'label', devicesFields: [{ field: 'ssid', type: 'scalar' }] },
-  { id: 'devCategory', title: 'Categoria', kind: 'labelHost', devicesFields: [{ field: 'devCategory', type: 'scalar' }] },
-  { id: 'devZone', title: 'Zona', kind: 'labelHost', devicesFields: [{ field: 'devZone', type: 'scalar' }] },
-  { id: 'devType', title: 'Tipo', kind: 'labelHost', devicesFields: [{ field: 'devType', type: 'scalar' }] },
+  { id: 'devCategory', title: 'Category', kind: 'labelHost', devicesFields: [{ field: 'devCategory', type: 'scalar' }] },
+  { id: 'devZone', title: 'Zone', kind: 'labelHost', devicesFields: [{ field: 'devZone', type: 'scalar' }] },
+  { id: 'devType', title: 'Type', kind: 'labelHost', devicesFields: [{ field: 'devType', type: 'scalar' }] },
 ];
 
 const TABLE_DEFAULTS = {
@@ -44,7 +47,6 @@ const TABLE_DEFAULTS = {
   marca: ['Amazon', 'Apple', 'Athom', 'Daikin', 'Elgato', 'Epson', 'Google', 'Govee', 'Legrand Netatmo', 'Lunvon',
     'Maxcio', 'Meross', 'Mova', 'NetGear', 'Philips Hue', 'Samsung', 'Sonoff', 'Sonos', 'Synology', 'Withings', 'tp-link'],
   protocollo: ['433,92 MHz', 'Ethernet (by wire)', 'N/A', 'Wi-Fi', 'Wi-Fi/Bluetooth', 'Zigbee'],
-  phisicalHub: ['Homey Pro', 'Mac Mini (by wire)', 'Netgear Orbi', 'None', 'Philips Hue Bridge', 'Samsung TV (direct)'],
   managingApp: ['Alexa', 'Amazon', 'Casa', 'Control by Legrand', 'Elgato Streamdeck', 'Epson', 'Google',
     'Govee Home', 'Homey Pro', 'Hue', 'MacOS', 'Meross', 'Mova', 'Netatmo', 'None', 'Onecta Daikin', 'Orbi',
     'Ring', 'Samsung TV (itself)', 'Sonos', 'Synology DSM 7.3.2', 'Tuya', 'Withings', 'eWeLink', 'iOS', 'iPadOS'],

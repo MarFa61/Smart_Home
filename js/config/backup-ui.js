@@ -37,18 +37,18 @@ async function restoreFromBackupFile(file) {
     const text = await file.text();
     backup = JSON.parse(text);
   } catch (error) {
-    status.textContent = 'File non valido: non è un backup JSON leggibile.';
+    status.textContent = 'Invalid file: not a readable JSON backup.';
     return;
   }
 
   if (!Array.isArray(backup.devices)) {
-    status.textContent = 'File non valido: manca l\'elenco dei dispositivi.';
+    status.textContent = 'Invalid file: missing device list.';
     return;
   }
 
   const confermato = confirm(
-    `Ripristinare questo backup (${backup.devices.length} dispositivi, esportato il ${backup.exportedAt || 'data sconosciuta'})?\n` +
-    `L'elenco Devices attuale su OneDrive verrà sostituito interamente.`
+    `Restore this backup (${backup.devices.length} devices, exported on ${backup.exportedAt || 'unknown date'})?\n` +
+    `The current Devices list on OneDrive will be replaced entirely.`
   );
   if (!confermato) return;
 
@@ -62,12 +62,12 @@ async function restoreFromBackupFile(file) {
       renderColoriScena();
     }
     renderDevicesTable();
-    status.textContent = `Ripristino completato: ${backup.devices.length} dispositivi.`;
+    status.textContent = `Restore complete: ${backup.devices.length} devices.`;
   } catch (error) {
     if (error.name === 'StorageConflictError') {
-      status.textContent = 'Conflitto: i dati su OneDrive sono cambiati nel frattempo. Ricarica la pagina e riprova.';
+      status.textContent = 'Conflict: data on OneDrive changed in the meantime. Reload the page and try again.';
     } else {
-      status.textContent = `Errore durante il ripristino: ${error.message}`;
+      status.textContent = `Error during restore: ${error.message}`;
     }
   }
 }

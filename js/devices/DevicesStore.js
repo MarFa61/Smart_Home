@@ -18,6 +18,7 @@ class DevicesStore {
     const { data, version } = await this._storageProvider.load(this._resourceKey);
     this.devices = (data && Array.isArray(data.devices)) ? data.devices : [];
     this.devices.forEach(migrateProtocolloField);
+    this.devices.forEach(migratePhisicalHubField);
     this._version = version;
     return this.devices;
   }
@@ -38,7 +39,7 @@ class DevicesStore {
       if (device.id === candidate.id) continue;
 
       if (candidate.nickname && device.nickname === candidate.nickname) {
-        conflicts.push(`Nickname "${candidate.nickname}" già usato da un altro dispositivo.`);
+        conflicts.push(`Nickname "${candidate.nickname}" already used by another device.`);
       }
       // Dev. Id. non deve essere univoco da solo (es. "meteo" è legittimo su più stazioni
       // meteo in zone diverse): a doverlo essere è l'Host Name completo (Categoria+Zona+
@@ -46,13 +47,13 @@ class DevicesStore {
 
       const deviceHostName = computeHostName(device.devCategory, device.devZone, device.devType, device.devId);
       if (candidateHostName && deviceHostName === candidateHostName) {
-        conflicts.push(`Host Name "${candidateHostName}" già generato per un altro dispositivo.`);
+        conflicts.push(`Host Name "${candidateHostName}" already generated for another device.`);
       }
 
       const deviceIps = (device.connections || []).map(c => (c.ip || '').trim()).filter(Boolean);
       for (const ip of candidateIps) {
         if (deviceIps.includes(ip)) {
-          conflicts.push(`IP "${ip}" già usato da un altro dispositivo.`);
+          conflicts.push(`IP "${ip}" already used by another device.`);
         }
       }
     }
@@ -81,6 +82,23 @@ function migrateProtocolloField(device) {
   if (!Array.isArray(device.protocolli)) device.protocolli = device.protocollo ? [device.protocollo] : [];
   if (device.protocolloConnessione === undefined) device.protocolloConnessione = device.protocollo || '';
   delete device.protocollo;
+}
+
+// Migrazione una tantum: "Phisical Hub" (etichetta libera) diventa "Connection Hub"
+// (nickname di un device reale). Mappatura decisa con Marco il 2026-09-01 sui 6
+// valori distinti realmente in uso — nessuno corrispondeva già a un nickname.
+const PHISICAL_HUB_MIGRATION_MAP = {
+  'Netgear Orbi': 'Router-Main',
+  'Homey Pro': 'HomeyPro',
+  'Philips Hue Bridge': 'Hue Bridge',
+  'Mac Mini (by wire)': 'MF Mac',
+  'None': '',
+  'Samsung TV (direct)': 'Samsung TV Soggiorno',
+};
+function migratePhisicalHubField(device) {
+  if (PHISICAL_HUB_MIGRATION_MAP.hasOwnProperty(device.phisicalHub)) {
+    device.phisicalHub = PHISICAL_HUB_MIGRATION_MAP[device.phisicalHub];
+  }
 }
 
 function makeEmptyDevice() {
