@@ -152,6 +152,26 @@ const COLOR_COMPONENTS = [
     defaultChiaro: { sfondo: '#0066cc', primoPiano: '#ffffff' },
     defaultScuro: { sfondo: '#0066cc', primoPiano: '#ffffff' },
   },
+  {
+    id: 'rowEditBtn',
+    categoria: 'Finestra e tabella',
+    nome: 'Row edit button',
+    descrizione: 'Background and text of the Edit button in each Devices table row.',
+    slots: ['sfondo', 'primoPiano'],
+    cssVar: { sfondo: '--row-edit-btn-bg', primoPiano: '--row-edit-btn-text' },
+    defaultChiaro: { sfondo: '#e8f0fe', primoPiano: '#1a73e8' },
+    defaultScuro: { sfondo: '#e8f0fe', primoPiano: '#1a73e8' },
+  },
+  {
+    id: 'rowDeleteBtn',
+    categoria: 'Finestra e tabella',
+    nome: 'Row delete button',
+    descrizione: 'Background and text of the Delete button in each Devices table row.',
+    slots: ['sfondo', 'primoPiano'],
+    cssVar: { sfondo: '--row-delete-btn-bg', primoPiano: '--row-delete-btn-text' },
+    defaultChiaro: { sfondo: '#fce8e6', primoPiano: '#c5221f' },
+    defaultScuro: { sfondo: '#fce8e6', primoPiano: '#c5221f' },
+  },
 ];
 
 function colorComponentById(id) {

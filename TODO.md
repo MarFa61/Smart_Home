@@ -200,6 +200,35 @@
 - **Non ancora testato da Marco**: nessuna delle modifiche di questa sessione è stata
   verificata dal vivo (per policy, il test dell'app è sempre un'azione di Marco).
 
+## Fatto — sessione 2026-09-03
+
+- **Icone dei pulsanti riga (Devices)**: sostituite matita/cestino emoji con le icone
+  reali fornite da Marco (`Icons/Modify.png`, `Icons/Cestino.png`), stessa tecnica di
+  ritaglio + sfondo trasparente usata per "New Device" — salvate come
+  `img/edit-icon.png` e `img/delete-icon.png`, mostrate a 22px.
+- **Pulsanti Edit/Delete a larghezza uguale e spaziatura simmetrica**: le due icone
+  hanno proporzioni molto diverse a parità di altezza (la penna è quasi il doppio più
+  larga del cestino) — risolto con una larghezza fissa comune (42px, icona centrata)
+  invece di inseguire il padding. Colonna Azioni ricalcolata a 126px = 14 (padding
+  cella) + 42 (pulsante) + 14 (spazio) + 42 (pulsante) + 14 (padding cella): i tre spazi
+  bianchi (sinistra, tra le icone, destra) risultano matematicamente identici.
+- **Colori dei pulsanti riga resi configurabili**: `.btn.edit`/`.btn.pow` avevano
+  colori fissi in CSS, condivisi anche da altri pulsanti dell'app (Connect, Cancel,
+  "+ Add connection", ecc.) — non potevano diventare configurabili globalmente senza
+  toccare anche quelli. Aggiunti due nuovi componenti in Colori → "Finestra e tabella"
+  ("Row edit button", "Row delete button"), applicati solo dentro la colonna Azioni
+  tramite un selettore CSS più specifico (`.actions .btn.edit`/`.actions .btn.pow`),
+  senza alterare gli altri usi delle stesse classi.
+- **Anteprima Colori estesa**: un colore configurabile senza riferimento visivo
+  nell'anteprima "non si capisce niente" (feedback esplicito di Marco, salvato in
+  memoria per i prossimi progetti con lo stesso pattern). Aggiunti nel frame di
+  anteprima: mini pulsanti Edit/Del nelle righe finte (per i due nuovi componenti) e,
+  colmando un gap preesistente non introdotto in questa sessione, una riga toolbar con
+  barra di ricerca finta e pulsante "New" (per i componenti già esistenti "Search bar"
+  e "Button New Device", che non erano mai comparsi in anteprima).
+- **Non ancora testato da Marco**: nessuna delle modifiche di questa sessione è stata
+  verificata dal vivo.
+
 ## Da fare — prossimo passo
 
 - [ ] Login OneDrive in locale: errore Microsoft "invalid_request: redirect_uri non

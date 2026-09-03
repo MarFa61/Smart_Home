@@ -88,15 +88,27 @@ function previewMarkup(tema) {
       <div class="colori-preview-sidebar" style="background:${v('sfondoSidebar', 'sfondo')};"></div>
       <div class="colori-preview-main">
         <div class="colori-preview-title" style="color:${v('titoloPagina', 'primoPiano')};">Devices</div>
+        <div class="colori-preview-toolbar">
+          <span class="colori-preview-search" style="background:${v('barraRicerca', 'sfondo')}; color:${v('barraRicerca', 'primoPiano')};">🔍 Search…</span>
+          <span class="colori-preview-btn" style="background:${v('pulsanteNuovoDevice', 'sfondo')}; color:${v('pulsanteNuovoDevice', 'primoPiano')};">New</span>
+        </div>
         <div class="colori-preview-card" style="background:${v('sfondoCard', 'sfondo')};">
           <div class="colori-preview-thead" style="background:${v('sfondoIntestazioneTabella', 'sfondo')}; color:${v('testoIntestazioneTabella', 'primoPiano')};">
-            <span>Nickname</span><span>Brand</span><span>IP</span>
+            <span>Nickname</span><span>Brand</span><span>IP</span><span>Actions</span>
           </div>
           <div class="colori-preview-row" style="color:${v('testoPrincipale', 'primoPiano')}; border-bottom:1px solid ${v('dividerRigaTabella', 'primoPiano')};">
             <span>Router-Main</span><span>NetGear</span><span>10.0.0.1</span>
+            <span class="colori-preview-actions">
+              <span class="colori-preview-btn" style="background:${v('rowEditBtn', 'sfondo')}; color:${v('rowEditBtn', 'primoPiano')};">Edit</span>
+              <span class="colori-preview-btn" style="background:${v('rowDeleteBtn', 'sfondo')}; color:${v('rowDeleteBtn', 'primoPiano')};">Del</span>
+            </span>
           </div>
           <div class="colori-preview-row" style="color:${v('testoPrincipale', 'primoPiano')};">
             <span>Sonoff Studio</span><span>Sonoff</span><span>10.0.0.132</span>
+            <span class="colori-preview-actions">
+              <span class="colori-preview-btn" style="background:${v('rowEditBtn', 'sfondo')}; color:${v('rowEditBtn', 'primoPiano')};">Edit</span>
+              <span class="colori-preview-btn" style="background:${v('rowDeleteBtn', 'sfondo')}; color:${v('rowDeleteBtn', 'primoPiano')};">Del</span>
+            </span>
           </div>
           <div class="colori-preview-row" style="color:${v('testoSecondario', 'primoPiano')};">
             <span colspan="3">No other device</span>

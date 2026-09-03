@@ -195,7 +195,9 @@ function renderDevicesHeader() {
   });
 
   const actionsColEl = document.createElement('col');
-  actionsColEl.style.width = '120px'; // 90px + 33%
+  // 14 (padding sinistro cella) + 42 (pulsante) + 14 (gap) + 42 (pulsante) + 14 (padding
+  // destro cella) = 126: nessun margine residuo, i tre spazi bianchi risultano identici.
+  actionsColEl.style.width = '126px';
   colgroup.appendChild(actionsColEl);
   const actionsTh = document.createElement('th');
   actionsTh.className = 'sticky-actions';
@@ -362,8 +364,8 @@ function renderDevicesTable() {
       ${cellsHtml}
       <td class="sticky-actions">
         <div class="actions">
-          <button class="btn edit" title="Edit" data-action="edit" data-id="${device.id}">✏️</button>
-          <button class="btn pow" title="Delete" data-action="delete" data-id="${device.id}">🗑️</button>
+          <button class="btn edit" title="Edit" data-action="edit" data-id="${device.id}"><img src="./img/edit-icon.png?v=1" class="row-action-icon" alt="Edit"></button>
+          <button class="btn pow" title="Delete" data-action="delete" data-id="${device.id}"><img src="./img/delete-icon.png?v=1" class="row-action-icon" alt="Delete"></button>
         </div>
       </td>
     `;

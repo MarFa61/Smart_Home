@@ -23,6 +23,10 @@
   --search-text: #333333;
   --add-device-btn-bg: #0066cc;
   --add-device-btn-text: #ffffff;
+  --row-edit-btn-bg: #e8f0fe;
+  --row-edit-btn-text: #1a73e8;
+  --row-delete-btn-bg: #fce8e6;
+  --row-delete-btn-text: #c5221f;
 }
 
 * { box-sizing: border-box; }
@@ -347,6 +351,46 @@ h1 {
   width: auto;
   vertical-align: middle;
   margin-right: 6px;
+}
+
+.row-action-icon {
+  height: 22px;
+  width: auto;
+  vertical-align: middle;
+}
+
+/* Le icone Modify (penna in diagonale, larga) e Cestino (stretta) hanno proporzioni
+   molto diverse a parità di altezza: invece di inseguire il padding per farle
+   combaciare, i due pulsanti hanno una larghezza fissa uguale con l'icona centrata
+   dentro — così restano identici indipendentemente dalla forma dell'icona. */
+/* Gap uguale al padding orizzontale della cella (14px, .compact-table td): così lo
+   spazio bianco a sinistra del primo pulsante, tra i due, e a destra dell'ultimo
+   risulta identico — la larghezza della colonna Azioni è calcolata di conseguenza
+   (vedi actionsColEl in devices-ui.js), senza margine residuo da un lato. */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.actions .btn {
+  width: 42px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 0;
+  padding-right: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Più specifiche di .btn.edit/.btn.pow (colore fisso, usato anche da altri pulsanti
+   dell'app): solo i due pulsanti riga Devices diventano configurabili in Colori. */
+.actions .btn.edit {
+  background-color: var(--row-edit-btn-bg);
+  color: var(--row-edit-btn-text);
+}
+.actions .btn.pow {
+  background-color: var(--row-delete-btn-bg);
+  color: var(--row-delete-btn-text);
 }
 
 .toolbar-chk {
@@ -780,6 +824,20 @@ dialog::backdrop {
   margin-bottom: 10px;
 }
 
+/* Barra di ricerca + pulsante "New Device" in scala, sopra la card della tabella
+   finta — stessa riga toolbar della vera pagina Devices. */
+.colori-preview-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.colori-preview-search {
+  flex: 1;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
 .colori-preview-card {
   border-radius: 10px;
   overflow: hidden;
@@ -788,13 +846,28 @@ dialog::backdrop {
 .colori-preview-thead,
 .colori-preview-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  align-items: center;
   padding: 8px 12px;
   font-size: 13px;
 }
 
 .colori-preview-thead {
   font-weight: 600;
+}
+
+/* Mini pulsanti Edit/Delete nell'anteprima: stessa idea dei pulsanti riga veri, in
+   scala, per mostrare l'effetto di "Row edit/delete button" senza dover aprire Devices. */
+.colori-preview-actions {
+  display: flex;
+  gap: 4px;
+}
+.colori-preview-btn {
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 /* Griglia degli swatch sotto ogni anteprima */
