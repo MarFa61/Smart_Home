@@ -1,4 +1,4 @@
-# TODO — Smart Home (analisi Excel, architettura, prima versione, pubblicazione GitHub Pages, import dati reali, rifinitura colonne Devices)
+# TODO — Smart Home (analisi Excel, architettura, prima versione, pubblicazione GitHub Pages, import dati reali, rifinitura colonne Devices, avviata migrazione backend verso Azure SQL)
 
 ## Fatto — sessione 2026-08-30
 
@@ -229,7 +229,57 @@
 - **Non ancora testato da Marco**: nessuna delle modifiche di questa sessione è stata
   verificata dal vivo.
 
+## Fatto — sessione 2026-09-03 (pomeriggio/sera) — Azure SQL / backend
+
+- **Decisione architetturale**: valutate le opzioni per rendere Incarichi/Oratori/Smart Home
+  utilizzabili anche da remoto e su Android (discussione a parte, non solo per questo progetto).
+  Per Smart Home nello specifico, deciso di sostituire OneDrive con **Azure SQL Database** come
+  storage, sfruttando l'offerta gratuita a vita di Microsoft (fino a 10 database per
+  sottoscrizione, 100.000 secondi vCore + 32 GB/mese ciascuno, verificata con fonti ufficiali
+  Microsoft). Superata la precedente ipotesi "SQL Server via Aruba" annotata in sessioni
+  precedenti.
+- **Sottoscrizione Azure SQL creata**: database `smarthome-db` sul server
+  `smarthome-sql-mfasani.database.windows.net` (Sweden Central), gruppo di risorse `Smart_Home`,
+  offerta gratuita applicata e confermata (costo stimato zero). Login SQL `smarthomeadm` creato
+  (password nota solo a Marco, salvata in `Backend/local.settings.json`, escluso da git).
+  Firewall: accesso consentito dal Mac di Marco e dai servizi Azure.
+- **Backend Azure Functions scritto e distribuito** (nuova cartella `Smart Home/Backend/`, nuovo
+  repository privato `github.com/MarFa61/smarthome-backend`): due funzioni HTTP
+  (`GET`/`PUT` su `/api/resources/{key}`) che replicano esattamente il contratto
+  `StorageProvider` già usato con OneDrive (blob JSON per chiave, concorrenza ottimistica) — non
+  serve quindi ridisegnare uno schema relazionale, basta una tabella generica `Resources`
+  (`ResourceKey`, `Data`, `Version` ROWVERSION, `UpdatedAt`). Logica di lettura/scrittura
+  condivisa in `src/lib/resources.js`, testata end-to-end con uno script Node reale
+  (`test/db-smoke-test.js`) contro il database vero: creazione, lettura, aggiornamento
+  versionato, rilevamento conflitto — tutti verificati.
+- **Function App creata su Azure** (`smarthome-api-mfasani`, piano Consumo (Windows) — il più
+  recente "Consumo Flessibile" non è supportato dalla sottoscrizione trial di Marco, scoperto
+  durante la creazione). Distribuzione automatica da GitHub configurata (Deployment Center →
+  GitHub Actions, autenticazione di base SCM abilitata dopo un primo tentativo OIDC fallito per
+  un residuo di un tentativo precedente). Primo deploy riuscito e verificato.
+- **API protette con autenticazione reale** (Easy Auth / App Service Authentication), non un
+  segreto nel codice (il repository frontend è pubblico): nuova app registration Entra
+  `smarthome-api-mfasani` (client ID `c7e2df7a-9f17-41da-9554-7fe7ebaac5ab`), tipo account
+  "Qualsiasi directory Microsoft Entra e account Microsoft personali" (per restare compatibile
+  col login OneDrive esistente, solo account personali), accesso ristretto all'app frontend già
+  esistente (client ID `ea23c586-5b8d-490a-a3ce-e2b7e9ff054a`) tramite "Requisito
+  dell'applicazione client", richieste non autenticate → HTTP 401 (non un redirect, corretto per
+  un'API). **Verificato dal vivo**: chiamata anonima all'endpoint pubblico risponde 401 come
+  atteso.
+- **Ambiente locale**: installati Node.js e Azure Functions Core Tools (via npm, non Homebrew —
+  un tap Homebrew non fidato ha bloccato l'installazione, barriera di sicurezza rispettata e non
+  aggirata) su richiesta per poter scrivere/testare il backend.
+
 ## Da fare — prossimo passo
+
+- [ ] **Smart Home → Azure SQL, completamento** (ripartire da qui): configurare "Esponi
+      un'API"/scope sull'app registration `smarthome-api-mfasani` su Entra ID (necessario perché
+      il frontend possa richiedere un token valido per chiamare le nuove API); scrivere
+      `AzureSqlProvider.js` nel frontend (stesso contratto `StorageProvider`, verso
+      `/api/resources/{key}`); aggiungere un selettore OneDrive/Azure SQL in Config; test
+      end-to-end dal vivo (login, salvataggio, conflitto). Backend già scritto, distribuito e
+      verificato — vedi sessione sopra per tutti i dettagli tecnici (nomi risorse, ID app,
+      repository).
 
 - [ ] Login OneDrive in locale: errore Microsoft "invalid_request: redirect_uri non
       valido" riscontrato da Marco durante il test di questa sessione — verificare che
@@ -252,11 +302,8 @@
       Tenda Armadio, Tenda Letto): rimossi volutamente dall'app da Marco, l'Excel non è ancora stato
       allineato di conseguenza (non un'azione per Claude — Marco userà a breve l'app come unica
       fonte, l'Excel diventerà obsoleto).
-- [ ] Possibile nuovo layer StorageProvider per SQL Server (Aruba): Marco potrebbe presto avere una
-      connessione remota disponibile — se/quando succede, valutare un nuovo `SqlServerProvider` con
-      la stessa interfaccia di `OneDriveProvider` e un selettore in Config per scegliere il tipo di
-      connessione. Serve comunque un layer API/backend intermedio (il browser non può parlare
-      direttamente con SQL Server). Nessuna azione finché la connessione non è disponibile.
+- [ ] Ipotesi "SQL Server via Aruba" (annotata nelle sessioni precedenti): superata, sostituita
+      dalla migrazione verso Azure SQL avviata in questa sessione (vedi sopra).
 
 ## Note — non decisioni aperte, non richiedono follow-up
 
