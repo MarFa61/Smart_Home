@@ -6,23 +6,24 @@
   <title>Smart Home</title>
   <link rel="stylesheet" href="./css/theme.css?v=50">
   <script src="./js/vendor/msal-browser.min.js"></script>
-  <script src="./js/storage/StorageProvider.js?v=34" defer></script>
-  <script src="./js/storage/OneDriveProvider.js?v=34" defer></script>
-  <script src="./js/storage/config.js?v=33" defer></script>
-  <script src="./js/app-storage.js?v=33" defer></script>
+  <script src="./js/storage/StorageProvider.js?v=51" defer></script>
+  <script src="./js/storage/OneDriveProvider.js?v=51" defer></script>
+  <script src="./js/storage/AzureSqlProvider.js?v=51" defer></script>
+  <script src="./js/storage/config.js?v=52" defer></script>
+  <script src="./js/app-storage.js?v=53" defer></script>
   <script src="./js/device-status-icon.js?v=34" defer></script>
   <script src="./js/devices/lookups.js?v=34" defer></script>
   <script src="./js/devices/hostname.js?v=33" defer></script>
   <script src="./js/devices/DevicesStore.js?v=42" defer></script>
   <script src="./js/devices/ColumnWidthStore.js?v=33" defer></script>
-  <script src="./js/tables/TablesStore.js?v=42" defer></script>
-  <script src="./js/tables/tables-ui.js?v=41" defer></script>
-  <script src="./js/devices/devices-ui.js?v=46" defer></script>
+  <script src="./js/tables/TablesStore.js?v=52" defer></script>
+  <script src="./js/tables/tables-ui.js?v=51" defer></script>
+  <script src="./js/devices/devices-ui.js?v=51" defer></script>
   <script src="./js/config/ConfigStore.js?v=33" defer></script>
   <script src="./js/config/color-components.js?v=35" defer></script>
   <script src="./js/config/ColorStore.js?v=33" defer></script>
-  <script src="./js/config/colori-ui.js?v=36" defer></script>
-  <script src="./js/config/backup-ui.js?v=34" defer></script>
+  <script src="./js/config/colori-ui.js?v=53" defer></script>
+  <script src="./js/config/backup-ui.js?v=52" defer></script>
   <script src="./js/app.js?v=34" defer></script>
 
   <!-- NOTA PER LO SVILUPPO: incrementare il numero "v" sopra ad ogni pubblicazione che
@@ -83,7 +84,7 @@
               <tbody id="devicesTableBody"></tbody>
             </table>
           </div>
-          <p class="placeholder" id="devicesEmptyMessage">No devices. Connect to OneDrive to get started.</p>
+          <p class="placeholder" id="devicesEmptyMessage">No devices. Connect to get started.</p>
         </div>
       </section>
 
@@ -98,7 +99,7 @@
             </div>
           </div>
 
-          <p class="placeholder" id="tabelleConnectPlaceholder">Connect to OneDrive to manage the support tables.</p>
+          <p class="placeholder" id="tabelleConnectPlaceholder">Connect to manage the support tables.</p>
 
           <div id="tabelleTabsArea" style="display:none;">
             <div class="dlg-tabs" id="tabelleTabsBar"></div>
@@ -112,13 +113,15 @@
           <div class="page-header-row">
             <h1>Config</h1>
             <div class="page-header-conn">
+              <span style="font-size:13px; color:var(--text-secondary);">Storage:</span>
+              <span id="storageProviderControl"></span>
               <div id="configConnStatus"></div>
               <button class="btn edit" id="btnConfigConnect">Connect</button>
               <button class="btn edit" id="btnConfigDisconnect" style="display:none;">Disconnect</button>
             </div>
           </div>
 
-          <p class="placeholder" id="configConnectPlaceholder">Connect to OneDrive to manage Backup &amp; Restore and Colors.</p>
+          <p class="placeholder" id="configConnectPlaceholder">Connect to manage Backup &amp; Restore and Colors.</p>
 
           <div id="configTabsArea" style="display:none;">
             <div class="dlg-tabs">

@@ -5,6 +5,9 @@
    ========================================================= */
 
 class StorageProvider {
+  /** Nome visualizzato del provider (es. "OneDrive"), per i messaggi di stato in UI. */
+  get providerName() { throw new Error('providerName non implementato'); }
+
   /** Avvia l'autenticazione con il provider. */
   async connect() { throw new Error('connect() non implementato'); }
 

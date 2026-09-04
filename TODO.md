@@ -270,21 +270,70 @@
   un tap Homebrew non fidato ha bloccato l'installazione, barriera di sicurezza rispettata e non
   aggirata) su richiesta per poter scrivere/testare il backend.
 
+## Fatto — sessione 2026-09-04 — Azure SQL / completamento migrazione
+
+- **Scope API su Entra ID**: trovato già presente (creato in una sessione precedente non
+  documentata) `api://c7e2df7a-.../user_impersonation` sull'app registration
+  `smarthome-api-mfasani`, abilitato. Aggiunta l'autorizzazione pre-consentita per l'app frontend
+  (`ea23c586-...`) tra le "Applicazioni client autorizzate", per evitare un popup di consenso
+  aggiuntivo al primo utilizzo.
+- **`AzureSqlProvider.js` scritto** (stesso contratto `StorageProvider` di `OneDriveProvider`):
+  autenticazione MSAL verso lo scope API, chiamate a `GET/PUT /api/resources/{key}` sul backend
+  Azure Functions.
+- **Selettore Storage in Config**: nuovo tendina OneDrive/Azure SQL nell'header di Config
+  (`js/app-storage.js` sceglie il provider da una preferenza in `localStorage`, cambio richiede un
+  ricaricamento pagina). `providerName` aggiunto al contratto `StorageProvider` e propagato ai
+  messaggi di stato in Devices/Tables/Config (prima dicevano sempre "OneDrive" fisso).
+- **Bug reale corretto**: il gestore del cambio provider chiamava `appStorage.disconnect()` prima
+  del reload — per OneDrive questo apre un popup di logout Microsoft (`logoutPopup`) che, se
+  bloccato/ignorato, lasciava l'`await` sospeso per sempre, impedendo il salvataggio della scelta
+  in `localStorage` e il reload (l'app restava silenziosamente su OneDrive nonostante il tendina
+  mostrasse "Azure SQL"). Risolto rimuovendo la disconnessione: non serve un vero logout per
+  cambiare provider, il reload ricrea comunque l'istanza corretta.
+- **Bug reale corretto — hostname API sbagliato**: il codice usava
+  `smarthome-api-mfasani.azurewebsites.net`, ma dopo luglio 2025 Azure assegna alle nuove Function
+  App un hostname con suffisso univoco casuale (lo schema `<nome-app>.azurewebsites.net` non
+  risolve più) — corretto in `config.js` con l'hostname reale letto da "defaultHostName" nella
+  Panoramica della risorsa su Azure Portal:
+  `smarthome-api-mfasani-bxhvebfdh8gmbade.swedencentral-01.azurewebsites.net`.
+- **CORS configurato** sulla Function App per l'origine di sviluppo locale
+  (`http://localhost:5500`).
+- **Test end-to-end confermato da Marco**: connessione ad Azure SQL riuscita, creazione e
+  salvataggio di un device di prova, isolamento dei dati verificato switchando ripetutamente tra i
+  due provider (Azure SQL mostra solo il record di test, OneDrive continua a mostrare i 65 device
+  reali, invariati).
+- **Causa reale del 500 intermittente trovata** (non un'ipotesi): il database `smarthome-db` è
+  sul piano **Serverless gratuito**, che va in auto-pausa quando inattivo — la prima richiesta
+  dopo una pausa deve aspettare il "resume" del database e falliva subito con HTTP 500 invece di
+  aspettare, un retry manuale bastava a risolverla. Corretto lato backend
+  (`Backend/src/lib/db.js`, commit `bc117f8`, pushato su `main` → deploy automatico): connessione
+  con retry e backoff (fino a 3 tentativi), `connectionTimeout` alzato a 30s, e un pool andato in
+  errore non resta più "bloccato" per tutta la vita dell'istanza Function (veniva riusato anche da
+  rifiutato, impedendo ogni retry successivo fino al prossimo cold start).
+- **Migrazione dati reale completata**: backup scaricato da OneDrive (esteso per includere anche
+  le **Tabelle**, mancavano dal formato di backup fin dalla loro introduzione — bug reale corretto
+  in `js/config/backup-ui.js`/`js/tables/TablesStore.js`) e ripristinato su Azure SQL via
+  Restore. Devices, Tabelle e Colori confermati presenti e corretti su Azure SQL.
+- **OneDrive "parcheggiato" su richiesta esplicita di Marco**: rimosso dalla UI (Config mostra
+  "Storage: Azure SQL" fisso, non più un tendina — con una sola opzione un menu a tendina non ha
+  senso, correzione fatta dopo un primo tentativo lasciato con un bug: un vecchio valore
+  `"onedrive"` rimasto in `localStorage` faceva apparire il tendina vuoto e rischiava di
+  ricollegarsi a OneDrive in silenzio). `OneDriveProvider.js` e tutta la logica restano nel
+  codice — per riattivarlo come opzione selezionabile basta aggiungere una riga a
+  `AVAILABLE_STORAGE_PROVIDERS` in `js/app-storage.js`, la UI in `colori-ui.js` ridiventa da sola
+  un tendina quando le opzioni sono più di una.
+
 ## Da fare — prossimo passo
 
-- [ ] **Smart Home → Azure SQL, completamento** (ripartire da qui): configurare "Esponi
-      un'API"/scope sull'app registration `smarthome-api-mfasani` su Entra ID (necessario perché
-      il frontend possa richiedere un token valido per chiamare le nuove API); scrivere
-      `AzureSqlProvider.js` nel frontend (stesso contratto `StorageProvider`, verso
-      `/api/resources/{key}`); aggiungere un selettore OneDrive/Azure SQL in Config; test
-      end-to-end dal vivo (login, salvataggio, conflitto). Backend già scritto, distribuito e
-      verificato — vedi sessione sopra per tutti i dettagli tecnici (nomi risorse, ID app,
-      repository).
+- [ ] Verificare dal vivo lo scenario di conflitto su Azure SQL (due sessioni che salvano sulla
+      stessa risorsa quasi in contemporanea) — non ancora testato, solo verificato su OneDrive in
+      sessioni precedenti.
 
 - [ ] Login OneDrive in locale: errore Microsoft "invalid_request: redirect_uri non
-      valido" riscontrato da Marco durante il test di questa sessione — verificare che
-      l'URL esatto in barra indirizzi (porta/percorso, slash finale incluso) corrisponda
-      al redirect URI registrato su Entra ID (dovrebbe essere `http://localhost:5500/`).
+      valido" riscontrato da Marco durante un test di sessione precedente — non più rilevante ora
+      che OneDrive non è raggiungibile dalla UI, ma da verificare se venisse mai riattivato
+      (l'URL esatto in barra indirizzi deve corrispondere al redirect URI registrato su Entra ID,
+      dovrebbe essere `http://localhost:5500/`).
       Non ancora risolto, interrotto per passare ad altro.
 
 - [ ] Altre "scene" di Colori oltre a "Finestra e tabella" (es. Bottoni, Badge, Campi form) — stesso

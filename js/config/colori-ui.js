@@ -172,7 +172,7 @@ async function loadAndShowConfig() {
   // senza mai passare da Devices, esporterebbe un elenco dispositivi vuoto).
   if (devicesStore.devices.length === 0) await devicesStore.load();
 
-  setConnStatusIcon(document.getElementById('configConnStatus'), true, `Connected to OneDrive (${appStorage.connectedAccountEmail()}).`);
+  setConnStatusIcon(document.getElementById('configConnStatus'), true, `Connected to ${appStorage.providerName} (${appStorage.connectedAccountEmail()}).`);
   document.getElementById('btnConfigConnect').style.display = 'none';
   document.getElementById('btnConfigDisconnect').style.display = 'inline-block';
   document.getElementById('configConnectPlaceholder').style.display = 'none';
@@ -181,7 +181,35 @@ async function loadAndShowConfig() {
 
 document.addEventListener('DOMContentLoaded', () => {
   registerUnsavedChangesChecker(checkColoriUnsavedChanges);
-  setConnStatusIcon(document.getElementById('configConnStatus'), false, 'Not connected to OneDrive.');
+  setConnStatusIcon(document.getElementById('configConnStatus'), false, `Not connected to ${appStorage.providerName}.`);
+
+  // Un solo provider disponibile oggi (Azure SQL, vedi AVAILABLE_STORAGE_PROVIDERS in
+  // app-storage.js): niente da scegliere, si mostra solo il nome. Se in futuro
+  // AVAILABLE_STORAGE_PROVIDERS torna ad averne più di uno, qui compare da sola una
+  // tendina — nessun'altra modifica necessaria in questo file.
+  const storageProviderControl = document.getElementById('storageProviderControl');
+  if (AVAILABLE_STORAGE_PROVIDERS.length > 1) {
+    const select = document.createElement('select');
+    AVAILABLE_STORAGE_PROVIDERS.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.label;
+      select.appendChild(opt);
+    });
+    select.value = getSelectedStorageProviderId();
+    // Niente disconnect() qui: per OneDrive/Azure SQL userebbe un popup di logout
+    // Microsoft (logoutPopup) che, se bloccato o ignorato, lascia l'await sospeso
+    // per sempre — e con esso anche il salvataggio della scelta e il reload sotto.
+    // Non serve comunque un vero logout per cambiare provider: il reload ricrea da
+    // zero l'istanza corretta in base a localStorage, quella vecchia viene scartata.
+    select.addEventListener('change', () => {
+      setSelectedStorageProviderId(select.value);
+      location.reload();
+    });
+    storageProviderControl.appendChild(select);
+  } else {
+    storageProviderControl.textContent = AVAILABLE_STORAGE_PROVIDERS[0].label;
+  }
 
   document.querySelectorAll('#section-config .tab-btn').forEach(btn => {
     btn.addEventListener('click', () => switchConfigTab(btn.dataset.configTab));
@@ -199,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btnConfigDisconnect').addEventListener('click', async () => {
     await appStorage.disconnect();
-    setConnStatusIcon(document.getElementById('configConnStatus'), false, 'Not connected to OneDrive.');
+    setConnStatusIcon(document.getElementById('configConnStatus'), false, `Not connected to ${appStorage.providerName}.`);
     document.getElementById('btnConfigConnect').style.display = 'inline-block';
     document.getElementById('btnConfigDisconnect').style.display = 'none';
     document.getElementById('configTabsArea').style.display = 'none';

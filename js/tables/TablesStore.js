@@ -67,6 +67,7 @@ class TablesStore {
     this._resourceKey = 'tables.json';
     this.tables = this._defaultTables();
     this._version = null;
+    this._loaded = false;
   }
 
   _defaultTables() {
@@ -87,6 +88,7 @@ class TablesStore {
       if (!this.tables[def.id]) this.tables[def.id] = defaults[def.id];
     });
     this._version = version;
+    this._loaded = true;
     return this.tables;
   }
 

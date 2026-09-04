@@ -661,7 +661,7 @@ async function saveEditingDevice() {
     renderDevicesTable();
   } catch (error) {
     if (error.name === 'StorageConflictError') {
-      alert('Data on OneDrive changed in the meantime (probably from another device). Reload the page and try again.');
+      alert('Data changed in the meantime (probably from another device). Reload the page and try again.');
     } else {
       alert(`Error saving: ${error.message}`);
     }
@@ -679,7 +679,7 @@ async function deleteDevice(id) {
     renderDevicesTable();
   } catch (error) {
     if (error.name === 'StorageConflictError') {
-      alert('Data on OneDrive changed in the meantime. Reload the page and try again.');
+      alert('Data changed in the meantime. Reload the page and try again.');
     } else {
       alert(`Error saving: ${error.message}`);
     }
@@ -715,7 +715,7 @@ function populateDeviceFormSelects() {
 
 document.addEventListener('DOMContentLoaded', () => {
   renderDevicesHeader();
-  setConnStatusIcon(devicesStatusEl(), false, 'Not connected to OneDrive.');
+  setConnStatusIcon(devicesStatusEl(), false, `Not connected to ${appStorage.providerName}.`);
 
   populateDeviceFormSelects();
 
@@ -799,7 +799,7 @@ document.addEventListener('DOMContentLoaded', () => {
     await appStorage.disconnect();
     devicesStore.devices = [];
     renderDevicesTable();
-    setConnStatusIcon(devicesStatusEl(), false, 'Not connected to OneDrive.');
+    setConnStatusIcon(devicesStatusEl(), false, `Not connected to ${appStorage.providerName}.`);
     document.getElementById('btnDevicesConnect').style.display = 'inline-block';
     document.getElementById('btnDevicesDisconnect').style.display = 'none';
     document.getElementById('btnDeviceNew').style.display = 'none';
@@ -813,7 +813,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function loadAndShowDevices() {
-  setConnStatusIcon(devicesStatusEl(), true, `Connected to OneDrive (${appStorage.connectedAccountEmail()}).`);
+  setConnStatusIcon(devicesStatusEl(), true, `Connected to ${appStorage.providerName} (${appStorage.connectedAccountEmail()}).`);
   document.getElementById('btnDevicesConnect').style.display = 'none';
   document.getElementById('btnDevicesDisconnect').style.display = 'inline-block';
   document.getElementById('btnDeviceNew').style.display = 'inline-block';

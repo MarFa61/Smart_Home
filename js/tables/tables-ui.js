@@ -305,7 +305,7 @@ async function loadAndShowTabelle() {
   if (devicesStore.devices.length === 0) await devicesStore.load();
   renderTabelleTabsArea();
 
-  setConnStatusIcon(document.getElementById('tabelleConnStatus'), true, `Connected to OneDrive (${appStorage.connectedAccountEmail()}).`);
+  setConnStatusIcon(document.getElementById('tabelleConnStatus'), true, `Connected to ${appStorage.providerName} (${appStorage.connectedAccountEmail()}).`);
   document.getElementById('btnTabelleConnect').style.display = 'none';
   document.getElementById('btnTabelleDisconnect').style.display = 'inline-block';
   document.getElementById('tabelleConnectPlaceholder').style.display = 'none';
@@ -314,7 +314,7 @@ async function loadAndShowTabelle() {
 
 document.addEventListener('DOMContentLoaded', () => {
   registerUnsavedChangesChecker(checkTabelleUnsavedChanges);
-  setConnStatusIcon(document.getElementById('tabelleConnStatus'), false, 'Not connected to OneDrive.');
+  setConnStatusIcon(document.getElementById('tabelleConnStatus'), false, `Not connected to ${appStorage.providerName}.`);
 
   document.getElementById('btnTabelleConnect').addEventListener('click', async () => {
     try {
@@ -328,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btnTabelleDisconnect').addEventListener('click', async () => {
     await appStorage.disconnect();
-    setConnStatusIcon(document.getElementById('tabelleConnStatus'), false, 'Not connected to OneDrive.');
+    setConnStatusIcon(document.getElementById('tabelleConnStatus'), false, `Not connected to ${appStorage.providerName}.`);
     document.getElementById('btnTabelleConnect').style.display = 'inline-block';
     document.getElementById('btnTabelleDisconnect').style.display = 'none';
     document.getElementById('tabelleTabsArea').style.display = 'none';

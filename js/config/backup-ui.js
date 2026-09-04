@@ -12,11 +12,14 @@ function currentTimestampForFilename() {
   return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
 }
 
-function downloadBackupFile() {
+async function downloadBackupFile() {
+  if (!tablesStore._loaded) await tablesStore.load();
+
   const backup = {
     exportedAt: new Date().toISOString(),
     devices: devicesStore.devices,
     colorOverrides: configStore.config.colorOverrides,
+    tables: tablesStore.tables,
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -48,7 +51,7 @@ async function restoreFromBackupFile(file) {
 
   const confermato = confirm(
     `Restore this backup (${backup.devices.length} devices, exported on ${backup.exportedAt || 'unknown date'})?\n` +
-    `The current Devices list on OneDrive will be replaced entirely.`
+    `The current Devices list on ${appStorage.providerName} will be replaced entirely.`
   );
   if (!confermato) return;
 
@@ -61,11 +64,17 @@ async function restoreFromBackupFile(file) {
       applyLightThemeToApp();
       renderColoriScena();
     }
+    if (backup.tables) {
+      tablesStore.tables = backup.tables;
+      tablesStore._loaded = true;
+      await tablesStore.save();
+      populateDeviceFormSelects();
+    }
     renderDevicesTable();
     status.textContent = `Restore complete: ${backup.devices.length} devices.`;
   } catch (error) {
     if (error.name === 'StorageConflictError') {
-      status.textContent = 'Conflict: data on OneDrive changed in the meantime. Reload the page and try again.';
+      status.textContent = `Conflict: data on ${appStorage.providerName} changed in the meantime. Reload the page and try again.`;
     } else {
       status.textContent = `Error during restore: ${error.message}`;
     }

@@ -27,6 +27,10 @@ class OneDriveProvider extends StorageProvider {
     });
   }
 
+  get providerName() {
+    return 'OneDrive';
+  }
+
   async connect() {
     await this._msalApp.initialize();
 
