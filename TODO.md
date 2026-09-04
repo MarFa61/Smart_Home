@@ -322,6 +322,23 @@
   codice — per riattivarlo come opzione selezionabile basta aggiungere una riga a
   `AVAILABLE_STORAGE_PROVIDERS` in `js/app-storage.js`, la UI in `colori-ui.js` ridiventa da sola
   un tendina quando le opzioni sono più di una.
+- **Bug reale trovato e corretto dopo la migrazione — Supported Protocols incompleti**: Marco ha
+  segnalato che Homey Pro mostrava solo 3 dei 6 protocolli salvati (Wi-Fi, Ethernet, Zigbee
+  visibili; Infrared, Matter, Bluetooth vuoti). Verificato con una query diretta sul database
+  (script Node temporaneo con le credenziali già in `Backend/local.settings.json`, mai stampate a
+  video) che i dati erano integri su entrambe le risorse (`devices.json` aveva tutti e 6 i
+  protocolli, `tables.json` aveva tutti e 8 i valori della tabella Protocollo, Infrared/Matter/
+  Bluetooth inclusi) — non era quindi un problema di migrazione dati. Causa reale: `tablesStore`
+  non viene mai caricato prima di aprire un device se l'utente non è passato prima dalla sezione
+  Tables in quella sessione — le tendine del dialog Device restavano popolate con i valori di
+  default scritti nel codice (`TABLE_DEFAULTS` in `TablesStore.js`, per Protocollo:
+  `433,92 MHz / Ethernet (by wire) / N/A / Wi-Fi / Wi-Fi/Bluetooth / Zigbee`, senza Infrared/
+  Matter/Bluetooth separato) invece che con quelli reali salvati. **Bug preesistente, non
+  specifico di Azure SQL** — c'era anche con OneDrive, mascherato perché i default coincidevano
+  quasi sempre con i dati reali fino a quando qualcuno non ha aggiunto Infrared/Matter/Bluetooth
+  alla tabella Protocollo in una sessione successiva alla scrittura dei default. Corretto in
+  `js/devices/devices-ui.js` (`loadAndShowDevices()`): carica `tablesStore` (e ripopola le
+  tendine) prima di mostrare Devices, se non già caricato. **Confermato funzionante da Marco.**
 
 ## Da fare — prossimo passo
 

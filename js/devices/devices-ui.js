@@ -817,6 +817,16 @@ async function loadAndShowDevices() {
   document.getElementById('btnDevicesConnect').style.display = 'none';
   document.getElementById('btnDevicesDisconnect').style.display = 'inline-block';
   document.getElementById('btnDeviceNew').style.display = 'inline-block';
+  // Senza questo, le tendine del dialog Device (popolate una sola volta al
+  // DOMContentLoaded, prima di qualunque connessione) restano sui valori di default
+  // hardcoded invece di quelli reali salvati in Tabelle — bug reale: un utente che apre
+  // Devices senza essere mai passato da Tables in questa sessione vedeva un editor con
+  // opzioni non aggiornate (es. valori di Protocollo aggiunti dopo la scrittura dei
+  // default apparivano come righe vuote, pur essendo salvati correttamente sul device).
+  if (!tablesStore._loaded) {
+    await tablesStore.load();
+    populateDeviceFormSelects();
+  }
   await devicesStore.load();
   renderDevicesTable();
 }
