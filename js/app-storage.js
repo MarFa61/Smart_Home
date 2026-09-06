@@ -49,3 +49,82 @@ const appStorage = createStorageProvider(getSelectedStorageProviderId());
 // automatica. Ogni sezione deve attendere questa promise prima di controllare
 // appStorage.isConnected().
 const appStorageReady = appStorage.tryRestoreSession();
+
+// Il Connect/Disconnect vive solo in Config (unico punto di connessione per tutta
+// l'app, vedi colori-ui.js): Devices e Tables non hanno più i propri pulsanti, ma
+// devono comunque aggiornare la loro icona di stato — e caricare/svuotare i propri
+// dati — quando la connessione cambia altrove. notifyStorageConnectionChange() va
+// chiamata da Config dopo ogni connect()/disconnect() riuscito.
+const _storageConnectionListeners = [];
+
+function onStorageConnectionChange(callback) {
+  _storageConnectionListeners.push(callback);
+}
+
+function notifyStorageConnectionChange(connected) {
+  _storageConnectionListeners.forEach(callback => callback(connected));
+}
+
+// Ricaricando la pagina con una sessione già attiva, tryRestoreSession() la ritrova
+// subito (solo lettura della cache MSAL, istantanea) ma il primo recupero dati vero e
+// proprio — rinnovo silenzioso del token, eventuale risveglio del backend — può
+// richiedere alcuni secondi. Senza indicazione, in quella finestra l'utente vede le
+// varie sezioni con stati apparentemente incoerenti (una già "connessa", un'altra
+// ancora no) e rischia di mettersi a cliccare in giro inutilmente. Le 3 sezioni
+// (Devices/Tables/Config) partono tutte in parallelo allo stesso reload: un contatore
+// condiviso mantiene il popup visibile finché anche l'ultima non ha finito.
+let _reconnectingCount = 0;
+
+function _showReconnectingModal() {
+  const dlg = document.getElementById('reconnectingDlg');
+  const iconUrl = connStatusIconUrl(true);
+  const iconEl = document.getElementById('reconnectDlgIcon');
+  if (iconUrl) {
+    iconEl.src = iconUrl;
+    iconEl.style.display = '';
+  } else {
+    iconEl.style.display = 'none';
+  }
+  document.getElementById('reconnectDlgProviderName').textContent = appStorage.providerName;
+  if (!dlg.open) dlg.showModal();
+}
+
+function _hideReconnectingModal() {
+  const dlg = document.getElementById('reconnectingDlg');
+  if (dlg.open) dlg.close();
+}
+
+// Sotto questa soglia il ripristino è già "caldo" (token ancora valido, backend già
+// sveglio): mostrare comunque il popup sarebbe un lampo fastidioso per un'attesa che
+// l'utente non fa nemmeno in tempo a percepire, e darebbe l'impressione sbagliata che
+// l'app si sia disconnessa quando in realtà la sessione era già valida. Il popup ha
+// senso solo per l'attesa realmente percepibile (il caso dei ~10 secondi osservato).
+const RECONNECT_MODAL_DELAY_MS = 300;
+
+/** Da chiamare al posto di "appStorageReady.then(giaConnesso => ...)" nel
+ *  DOMContentLoaded di ogni sezione: incapsula il controllo (unificato, prima era
+ *  incoerente tra sezioni) ed espone all'utente l'attesa della riconnessione
+ *  automatica, ma solo se dura abbastanza da essere percepita (vedi
+ *  RECONNECT_MODAL_DELAY_MS sopra). Nessun popup se non c'era alcuna sessione da
+ *  ritrovare — in quel caso la sezione resta semplicemente "Not connected". */
+async function autoReconnectAndLoad(loadFn) {
+  const giaConnesso = await appStorageReady;
+  if (!giaConnesso && !appStorage.isConnected()) return;
+
+  let shown = false;
+  const timer = setTimeout(() => {
+    shown = true;
+    _reconnectingCount++;
+    if (_reconnectingCount === 1) _showReconnectingModal();
+  }, RECONNECT_MODAL_DELAY_MS);
+
+  try {
+    await loadFn();
+  } finally {
+    clearTimeout(timer);
+    if (shown) {
+      _reconnectingCount--;
+      if (_reconnectingCount === 0) _hideReconnectingModal();
+    }
+  }
+}

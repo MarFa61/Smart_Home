@@ -592,6 +592,54 @@ dialog::backdrop {
   font-size: 14px;
 }
 
+/* Popup "Reconnecting…" — vedi autoReconnectAndLoad() in app-storage.js. */
+.reconnect-dlg {
+  width: 260px;
+  min-width: 0;
+  resize: none;
+  overflow: visible;
+  text-align: center;
+}
+
+.reconnect-dlg-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.reconnect-dlg-icon-wrap {
+  position: relative;
+  width: 96px;
+  height: 96px;
+}
+
+.reconnect-dlg-icon {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+}
+
+.reconnect-dlg-hourglass {
+  position: absolute;
+  right: -4px;
+  bottom: -8px;
+  font-size: 30px;
+  animation: reconnect-dlg-hourglass-flip 1.6s ease-in-out infinite;
+}
+
+@keyframes reconnect-dlg-hourglass-flip {
+  0%, 35% { transform: rotate(0deg); }
+  50%, 85% { transform: rotate(180deg); }
+  100% { transform: rotate(180deg); }
+}
+
+.reconnect-dlg-content p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-color);
+}
+
 .dh h2 { margin: 0 0 16px 0; font-size: 18px; }
 
 .dlg-tabs {
@@ -634,6 +682,10 @@ dialog::backdrop {
      sua colonna più larga delle altre due, anche solo di qualche pixel. */
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+  /* Impostata via JS (syncDeviceDialogTabHeight in devices-ui.js) all'altezza del tab
+     "Status & Notes": senza questo la finestra cambiava altezza passando da un tab
+     all'altro, perché ciascuno ha un numero diverso di campi. */
+  min-height: var(--device-dlg-tab-min-height, 0);
 }
 
 .full-width { grid-column: 1 / -1; }
@@ -641,6 +693,42 @@ dialog::backdrop {
    restare con meno campi delle 3 colonne disponibili (es. solo 2), invece di lasciare
    che il campo successivo scorra a riempire la cella vuota rimasta. */
 .row-start { grid-column-start: 1; }
+
+/* Tab con righe a larghezza libera (oggi solo Network & Connectivity): a differenza
+   degli altri tab del dialog Device, qui alcuni campi occupano una frazione ridotta
+   e concordata (in %, via stile inline su ogni .dlg-form-group) della riga invece
+   della quota fissa di 1/3 della griglia generica — serve per stare in 4 per riga.
+   Sostituisce .tab-content.active (display:grid) solo per display/flex-direction:
+   gap e min-height restano quelli della regola generica, non ripetuti qui. */
+#dtab-net.tab-content.active {
+  display: flex;
+  flex-direction: column;
+}
+
+.dlg-form-row {
+  display: flex;
+  gap: 12px;
+  /* Ogni campo mantiene la propria larghezza (flex-basis fisso, vedi sotto): senza
+     questo lo spazio residuo della riga si accumulava tutto in fondo, lasciando i
+     campi ammassati a sinistra invece di distribuirsi sull'intera riga. */
+  justify-content: space-between;
+}
+
+/* flex-basis fissato via stile inline su ogni gruppo: niente crescita/restringimento
+   automatico, altrimenti le percentuali concordate coi valori assoluti richiesti
+   verrebbero alterate per riempire lo spazio residuo della riga. */
+.dlg-form-row .dlg-form-group {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+/* Colonne strette (es. Connection Speed al 17%): senza questo, l'etichetta più
+   l'icona ⓘ non ci stanno su una riga e l'icona va a capo da sola. Può sconfinare
+   leggermente nel gap verso il campo successivo, mai sovrapporsi al suo contenuto
+   grazie al gap/allo spazio distribuito da justify-content: space-between. */
+.dlg-form-row .dlg-form-group label {
+  white-space: nowrap;
+}
 
 .dlg-form-group {
   display: flex;
@@ -672,6 +760,16 @@ dialog::backdrop {
 .dlg-form-group input:not([type="color"]),
 .dlg-form-group select {
   height: 36px;
+}
+
+/* Campo obbligatorio nel dialog Device: bordo rosso fisso, indipendente dal valore
+   (marcatore visivo "questo campo va compilato", non uno stato di validazione) —
+   l'errore vero e proprio compare solo al Save, in #deviceDlgValidation. Il
+   selettore discendente colpisce anche le righe dinamiche di "Supported protocols"
+   dentro #devProtocolliList, non solo il campo diretto del gruppo. */
+.dlg-form-group.required-field input:not([type="checkbox"]),
+.dlg-form-group.required-field select {
+  border-color: #c5221f;
 }
 
 /* input[type=color]: il padding/border-radius generico sopra rompe il rendering
@@ -1061,4 +1159,98 @@ dialog::backdrop {
   padding: 6px 8px;
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+/* =========================================================
+   FIELDS & HELP (Config) — testo di aiuto per campo (icona ⓘ + popover) e
+   obbligatorietà dinamica dei campi Devices. Vedi HelpFieldsStore.js/
+   field-help-icon.js/fields-help-ui.js.
+   ========================================================= */
+
+/* Wrapper cliccabile per lo switch .switch-input/.switch-slider già esistente in
+   questo file — qui riusato sia per lo switch globale "Tooltips enabled" sia per
+   il Mandatory di ogni riga della tabella. */
+.switch-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.fields-help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.fields-help-filters {
+  display: flex;
+  gap: 10px;
+}
+
+.fields-help-filters select {
+  height: 36px;
+  padding: 7px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.fields-help-toggle {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 12px;
+}
+
+.fields-help-text-cell {
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+/* Icona ⓘ cliccabile accanto a una label/controllo — non un tooltip nativo
+   (.help(), a comparsa solo sull'hover): questa app gira anche su iPad/iPhone,
+   dove l'hover non esiste, quindi serve un click/tap per mostrare il testo. */
+.field-help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--primary);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.field-help-edit-dlg {
+  width: 420px;
+  min-width: 0;
+}
+
+.field-help-popover {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  z-index: 50;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  padding: 10px 12px;
+  max-width: 280px;
+  font-size: 13px;
+  color: var(--text-color);
 }

@@ -1,5 +1,5 @@
 /* =========================================================
-   STORE PER LA CONFIGURAZIONE DELL'APP (Colori, per ora)
+   STORE PER LA CONFIGURAZIONE DELL'APP (Colori, Fields & Help)
    Stessa logica di DevicesStore ma per la risorsa "config.json":
    così le preferenze seguono l'utente su tutti i device, non
    solo sul browser in cui sono state impostate (a differenza
@@ -12,6 +12,10 @@ class ConfigStore {
     this._resourceKey = 'config.json';
     this.config = { colorOverrides: {} };
     this._version = null;
+    // Stesso scopo di TablesStore._loaded: evita ricaricamenti superflui a chi (es.
+    // devices-ui.js, per helpFieldsStore) ha solo bisogno che i dati ci siano,
+    // indipendentemente da chi li ha effettivamente richiesti per primo.
+    this._loaded = false;
   }
 
   async load() {
@@ -19,6 +23,7 @@ class ConfigStore {
     this.config = data || { colorOverrides: {} };
     if (!this.config.colorOverrides) this.config.colorOverrides = {};
     this._version = version;
+    this._loaded = true;
     return this.config;
   }
 

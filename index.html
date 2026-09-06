@@ -4,25 +4,28 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Home</title>
-  <link rel="stylesheet" href="./css/theme.css?v=50">
+  <link rel="stylesheet" href="./css/theme.css?v=57">
   <script src="./js/vendor/msal-browser.min.js"></script>
   <script src="./js/storage/StorageProvider.js?v=51" defer></script>
   <script src="./js/storage/OneDriveProvider.js?v=51" defer></script>
   <script src="./js/storage/AzureSqlProvider.js?v=51" defer></script>
   <script src="./js/storage/config.js?v=52" defer></script>
-  <script src="./js/app-storage.js?v=53" defer></script>
-  <script src="./js/device-status-icon.js?v=34" defer></script>
+  <script src="./js/app-storage.js?v=56" defer></script>
+  <script src="./js/device-status-icon.js?v=35" defer></script>
+  <script src="./js/config/HelpFieldsStore.js?v=6" defer></script>
+  <script src="./js/field-help-icon.js?v=2" defer></script>
   <script src="./js/devices/lookups.js?v=34" defer></script>
   <script src="./js/devices/hostname.js?v=33" defer></script>
   <script src="./js/devices/DevicesStore.js?v=42" defer></script>
   <script src="./js/devices/ColumnWidthStore.js?v=33" defer></script>
-  <script src="./js/tables/TablesStore.js?v=52" defer></script>
-  <script src="./js/tables/tables-ui.js?v=51" defer></script>
-  <script src="./js/devices/devices-ui.js?v=52" defer></script>
-  <script src="./js/config/ConfigStore.js?v=33" defer></script>
+  <script src="./js/tables/TablesStore.js?v=53" defer></script>
+  <script src="./js/tables/tables-ui.js?v=54" defer></script>
+  <script src="./js/devices/devices-ui.js?v=63" defer></script>
+  <script src="./js/config/ConfigStore.js?v=34" defer></script>
   <script src="./js/config/color-components.js?v=35" defer></script>
   <script src="./js/config/ColorStore.js?v=33" defer></script>
-  <script src="./js/config/colori-ui.js?v=53" defer></script>
+  <script src="./js/config/colori-ui.js?v=56" defer></script>
+  <script src="./js/config/fields-help-ui.js?v=2" defer></script>
   <script src="./js/config/backup-ui.js?v=52" defer></script>
   <script src="./js/app.js?v=34" defer></script>
 
@@ -58,8 +61,6 @@
             <h1>Devices</h1>
             <div class="page-header-conn">
               <div id="devicesConnStatus"></div>
-              <button class="btn edit" id="btnDevicesConnect">Connect</button>
-              <button class="btn edit" id="btnDevicesDisconnect" style="display:none;">Disconnect</button>
             </div>
           </div>
 
@@ -84,7 +85,7 @@
               <tbody id="devicesTableBody"></tbody>
             </table>
           </div>
-          <p class="placeholder" id="devicesEmptyMessage">No devices. Connect to get started.</p>
+          <p class="placeholder" id="devicesEmptyMessage">No devices. Connect via Config to get started.</p>
         </div>
       </section>
 
@@ -94,12 +95,10 @@
             <h1>Tables</h1>
             <div class="page-header-conn">
               <div id="tabelleConnStatus"></div>
-              <button class="btn edit" id="btnTabelleConnect">Connect</button>
-              <button class="btn edit" id="btnTabelleDisconnect" style="display:none;">Disconnect</button>
             </div>
           </div>
 
-          <p class="placeholder" id="tabelleConnectPlaceholder">Connect to manage the support tables.</p>
+          <p class="placeholder" id="tabelleConnectPlaceholder">Connect via Config to manage the support tables.</p>
 
           <div id="tabelleTabsArea" style="display:none;">
             <div class="dlg-tabs" id="tabelleTabsBar"></div>
@@ -127,13 +126,14 @@
             <div class="dlg-tabs">
               <button type="button" class="tab-btn active" data-config-tab="ctab-backup">Backup &amp; Restore</button>
               <button type="button" class="tab-btn" data-config-tab="ctab-colori">Colors</button>
+              <button type="button" class="tab-btn" data-config-tab="ctab-fields">Fields &amp; Help</button>
             </div>
 
             <div id="ctab-backup" class="config-tab-content active">
               <p style="font-size:13px; color:#666; margin-top:0;">Export a snapshot of Devices and Colors to a local JSON file, or restore from a previous backup.</p>
               <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                 <button class="btn btn-primary-add" id="btnBackupDownload">📥 Download Backup</button>
-                <label class="btn edit" style="cursor:pointer;">
+                <label class="btn edit" id="lblRestoreFile" style="cursor:pointer;">
                   📤 Restore from file…
                   <input type="file" id="inputRestoreFile" accept="application/json" style="display:none;">
                 </label>
@@ -165,6 +165,37 @@
               </div>
               <p id="coloriSaveStatus" style="font-size:13px; color:var(--text-secondary); margin-top:10px;"></p>
             </div>
+
+            <div id="ctab-fields" class="config-tab-content">
+              <p style="font-size:13px; color:var(--text-secondary); margin-top:0;">Help text shown next to each field (click the ⓘ icon), grouped by screen and tab. "Mandatory" controls whether the field's frame is shown in red and blocks Save when empty — it only has an effect on Devices fields today.</p>
+
+              <div class="fields-help-header">
+                <div class="fields-help-filters">
+                  <select id="fieldsHelpScreen"></select>
+                  <select id="fieldsHelpGroup" style="display:none;"></select>
+                </div>
+                <label class="switch-wrap fields-help-toggle">
+                  <span>Tooltips enabled</span>
+                  <input type="checkbox" class="switch-input" id="fieldsHelpEnabled" checked>
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+
+              <div class="table-responsive">
+                <table id="fieldsHelpTable" class="compact-table">
+                  <thead>
+                    <tr>
+                      <th style="width:90px;">Mandatory</th>
+                      <th style="width:210px;">Label</th>
+                      <th>Text</th>
+                      <th style="width:74px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="fieldsHelpTableBody"></tbody>
+                </table>
+              </div>
+              <p id="fieldsHelpStatus" style="font-size:13px; color:var(--text-secondary); margin-top:10px;"></p>
+            </div>
           </div>
         </div>
       </section>
@@ -180,7 +211,6 @@
     <div class="dlg-tabs">
       <button type="button" class="tab-btn active" data-tab="dtab-gen">General</button>
       <button type="button" class="tab-btn" data-tab="dtab-net">Network &amp; Connectivity</button>
-      <button type="button" class="tab-btn" data-tab="dtab-cfg">Configuration &amp; Groups</button>
       <button type="button" class="tab-btn" data-tab="dtab-stat">Status &amp; Notes</button>
     </div>
 
@@ -224,47 +254,49 @@
       </div>
     </div>
 
-    <div id="dtab-net" class="tab-content">
-      <div class="dlg-form-group">
-        <label for="devSSID">SSID</label>
-        <select id="devSSID"></select>
+    <div id="dtab-net" class="tab-content dlg-tab-flex">
+      <div class="dlg-form-row">
+        <div class="dlg-form-group" style="flex-basis:22%;">
+          <label for="devSSID">SSID</label>
+          <select id="devSSID"></select>
+        </div>
+        <div class="dlg-form-group" style="flex-basis:17%;">
+          <label for="devConnSpeed">Connection Speed</label>
+          <select id="devConnSpeed"></select>
+        </div>
+        <div class="dlg-form-group" style="flex-basis:33%;">
+          <label>Host Name</label>
+          <input type="text" id="devHostNamePreview" readonly>
+        </div>
+        <div class="dlg-form-group" style="flex-basis:17%;">
+          <label for="devId">Dev. Id.</label>
+          <input type="text" id="devId">
+        </div>
       </div>
-      <div class="dlg-form-group">
-        <label for="devConnSpeed">Connection Speed</label>
-        <input type="text" id="devConnSpeed">
+
+      <div class="dlg-form-row">
+        <div class="dlg-form-group" style="flex-basis:17%;">
+          <label for="devGroup">Dev. Group</label>
+          <select id="devGroup"></select>
+        </div>
+        <div class="dlg-form-group" style="flex-basis:17%;">
+          <label for="devCategory">Dev. Category</label>
+          <select id="devCategory"></select>
+        </div>
+        <div class="dlg-form-group" style="flex-basis:17%;">
+          <label for="devZone">Dev. Zone</label>
+          <select id="devZone"></select>
+        </div>
+        <div class="dlg-form-group" style="flex-basis:17%;">
+          <label for="devType">Dev. Type</label>
+          <select id="devType"></select>
+        </div>
       </div>
-      <div class="dlg-form-group">
-        <label>Host Name (automatic)</label>
-        <input type="text" id="devHostNamePreview" readonly>
-      </div>
+
       <div class="dlg-form-group full-width">
-        <label>Connections (IP) — usually just one, more than one only for devices with multiple network interfaces</label>
-        <p id="devIpGroupHint" class="tabelle-hostname-note" style="display:none;"></p>
+        <label>IP Address</label>
         <div id="devConnectionsList"></div>
         <button type="button" class="btn edit" id="btnAddConnection" style="margin-top:6px; align-self:flex-start;">+ Add connection</button>
-      </div>
-    </div>
-
-    <div id="dtab-cfg" class="tab-content">
-      <div class="dlg-form-group">
-        <label for="devGroup">Dev. Group</label>
-        <select id="devGroup"></select>
-      </div>
-      <div class="dlg-form-group">
-        <label for="devCategory">Dev. Category</label>
-        <select id="devCategory"></select>
-      </div>
-      <div class="dlg-form-group">
-        <label for="devZone">Dev. Zone</label>
-        <select id="devZone"></select>
-      </div>
-      <div class="dlg-form-group">
-        <label for="devType">Dev. Type</label>
-        <select id="devType"></select>
-      </div>
-      <div class="dlg-form-group">
-        <label for="devId">Dev. Id.</label>
-        <input type="text" id="devId">
       </div>
     </div>
 
@@ -272,10 +304,6 @@
       <div class="dlg-form-group">
         <label for="devAvanzamento">Progress</label>
         <select id="devAvanzamento"></select>
-      </div>
-      <div class="dlg-form-group">
-        <label for="devDisponibile">Available now?</label>
-        <label class="toolbar-chk"><input type="checkbox" id="devDisponibile"> Yes</label>
       </div>
 
       <div class="dlg-form-group full-width">
@@ -306,11 +334,49 @@
       </div>
     </div>
 
+    <div id="deviceDlgValidation" class="conflicts-box" style="display:none;"></div>
     <div id="deviceDlgConflicts" class="conflicts-box" style="display:none;"></div>
 
     <div class="foot">
       <button type="button" class="btn pow" id="btnDeviceCancel">❌ Cancel</button>
       <button type="button" class="btn btn-primary-add" id="btnDeviceSave">💾 Save</button>
+    </div>
+  </dialog>
+
+  <!-- MODIFICA TESTO DI AIUTO (tab Fields & Help di Config) -->
+  <dialog id="fieldHelpEditDlg" class="field-help-edit-dlg">
+    <div class="dh">
+      <h2>Edit help text</h2>
+    </div>
+    <div class="dlg-form-group">
+      <label>Key</label>
+      <input type="text" id="fieldHelpEditKey" readonly>
+    </div>
+    <div class="dlg-form-group">
+      <label>Label</label>
+      <input type="text" id="fieldHelpEditLabel" readonly>
+    </div>
+    <div class="dlg-form-group full-width">
+      <label for="fieldHelpEditText">Text</label>
+      <textarea id="fieldHelpEditText" rows="4"></textarea>
+    </div>
+    <div class="foot">
+      <button type="button" class="btn pow" id="btnFieldHelpEditCancel">❌ Cancel</button>
+      <button type="button" class="btn btn-primary-add" id="btnFieldHelpEditSave">💾 Save</button>
+    </div>
+  </dialog>
+
+  <!-- RICONNESSIONE AUTOMATICA — mostrata al ricaricamento della pagina finché la
+       sessione già attiva (trovata da tryRestoreSession) non è confermata dal primo
+       caricamento dati riuscito, vedi autoReconnectAndLoad() in app-storage.js. Nessun
+       pulsante: è solo informativa, si chiude da sola. -->
+  <dialog id="reconnectingDlg" class="reconnect-dlg">
+    <div class="reconnect-dlg-content">
+      <div class="reconnect-dlg-icon-wrap">
+        <img id="reconnectDlgIcon" class="reconnect-dlg-icon" alt="">
+        <span class="reconnect-dlg-hourglass" aria-hidden="true">⏳</span>
+      </div>
+      <p>Reconnecting to <span id="reconnectDlgProviderName"></span>…</p>
     </div>
   </dialog>
 

@@ -1,4 +1,4 @@
-# TODO — Smart Home (analisi Excel, architettura, prima versione, pubblicazione GitHub Pages, import dati reali, rifinitura colonne Devices, avviata migrazione backend verso Azure SQL)
+# TODO — Smart Home (analisi Excel, architettura, prima versione, pubblicazione GitHub Pages, import dati reali, rifinitura colonne Devices, migrazione backend verso Azure SQL, connessione unica per l'app, tab "Fields & Help", riorganizzazione dialog Device)
 
 ## Fatto — sessione 2026-08-30
 
@@ -340,7 +340,70 @@
   `js/devices/devices-ui.js` (`loadAndShowDevices()`): carica `tablesStore` (e ripopola le
   tendine) prima di mostrare Devices, se non già caricato. **Confermato funzionante da Marco.**
 
+## Fatto — sessione 2026-09-05 — Connessione unica per tutta l'app
+
+- **Connect/Disconnect consolidato in Config**: Devices, Tables e Config avevano ciascuno il
+  proprio pulsante sulla stessa istanza `appStorage`, senza sincronizzarsi tra loro — disconnettersi
+  da una sezione lasciava le altre bloccate sullo stato precedente (bug segnalato da Marco). Ora
+  solo Config ha i pulsanti; Devices/Tables mostrano solo l'icona di stato e reagiscono ai cambi
+  decisi altrove tramite un pub/sub (`onStorageConnectionChange`/`notifyStorageConnectionChange` in
+  `app-storage.js`) — risolve anche il consolidamento già segnato come "da fare" sotto (la
+  connessione stabilita in una sezione ora si propaga da sola alle altre, senza un secondo click).
+- **Popup "Reconnecting…"** per il ripristino automatico della sessione al reload (icona ingrandita
+  + clessidra animata), mostrato solo se il ripristino impiega più di 300ms — sotto quella soglia
+  (sessione già "calda", token/backend non serviva risvegliarli) nessun popup, per non dare
+  l'impressione di una disconnessione quando non c'è stata (bug segnalato da Marco e corretto nella
+  stessa sessione: la prima versione mostrava il popup anche a riconnessione istantanea).
+- **Confermato funzionante da Marco.**
+
+## Fatto — sessione 2026-09-06 — Campi obbligatori dinamici, tab "Fields & Help", riorganizzazione Network & Connectivity
+
+- **Bordo rosso sui campi obbligatori** del dialog Device (elenco confermato da Marco tab per tab)
+  + blocco del Save con messaggio d'errore se mancano.
+- **Nuovo tab "Fields & Help" in Config**, ispirato a "Testi di Aiuto" di Incarichi ma adattato:
+  icona ⓘ cliccabile invece del tooltip nativo `.help()`, perché questa app gira anche su
+  iPad/iPhone dove l'hover non esiste. Testo di aiuto per campo, editabile dall'utente, e — a
+  differenza del modello Incarichi — uno switch "Mandatory" per riga che rende **dinamica**
+  l'obbligatorietà dei campi Devices (bordo rosso e validazione al Save leggono ora da qui, non più
+  da un elenco fisso nel codice). Switch globale "Tooltips enabled" per mostrare/nascondere tutte le
+  icone ⓘ, indipendente da Mandatory (un campo obbligatorio resta tale anche a icone spente). Nuovi
+  file: `js/config/HelpFieldsStore.js`, `js/field-help-icon.js`, `js/config/fields-help-ui.js`.
+- **Tab "Network & Connectivity" riorganizzato**: Dev. Group/Category/Zone/Type/Id. spostati qui dal
+  tab "Configuration & Groups" (eliminato); "Connection Speed" diventato una tendina su una nuova
+  tabella di supporto (prima testo libero); layout a righe di larghezza libera (non più la griglia
+  fissa a 3 colonne) per stare in 4 campi per riga. Rimosso il campo "Available now?" da Status &
+  Notes (il dato `disponibileOra` resta nel modello e nella colonna Devices, non nel dialog).
+- **Bug reale corretto**: un valore salvato su un device non più tra le opzioni di una tendina (es.
+  Dev. Group non aggiornato dopo la migrazione) appariva come riquadro vuoto, indistinguibile da un
+  campo mai compilato. Corretto con `setSelectValueKeepingUnknown()` (`devices-ui.js`): il valore
+  salvato viene sempre mostrato, anche se "fuori lista" — non solo per Dev. Group, per tutte le
+  tendine del dialog Device collegate a una tabella/elenco.
+- **Verifica completa dati reali vs Excel originale** (script Node ad hoc, non a occhio, per
+  evitare errori di trascrizione su 60 device): trovati e corretti due campi mai migrati su gran
+  parte dei device reali — **Dev. Group** (58 device) e **Connected to** (9 device), entrambi
+  vuoti/assenti su Azure SQL nonostante valorizzati nell'Excel originale. File di correzione
+  preparato per Marco in Downloads
+  (`smarthome-backup-20260906-173548-devgroup-connectedto-fix.json`, da importare con Restore from
+  file quando vuole — azione sua, non eseguita da Claude). Trovati anche 8 riferimenti "Connection
+  Hub" (`phisicalHub`) orfani, che puntano a un nickname di device non più esistente (es. "HomeyPro"
+  vs l'attuale "Homey Pro" con lo spazio) — non corretti: serve una scelta di Marco su alcuni casi
+  ambigui (es. a quale tra "Samsung TV Soggiorno"/"Samsung TV Camera" far puntare FireTV/Chromecast).
+- **Falso allarme di Claude, corretto**: inizialmente segnalati a Marco come "5 device persi nella
+  migrazione" (Aqara Hub, AqaraCamera, AqaraSoggiorno, Tenda Armadio, Tenda Letto) — in realtà già
+  documentato più sotto in questo stesso file come rimozione **volontaria** di Marco, non un bug.
+  Errore di Claude per non aver riletto il TODO (fonte di verità di questo progetto) prima di
+  segnalarlo come anomalia.
+- **Non ancora testato da Marco**: nessuna delle modifiche di questa sessione (Fields & Help,
+  riorganizzazione tab, `setSelectValueKeepingUnknown`) è stata verificata dal vivo.
+
 ## Da fare — prossimo passo
+
+- [ ] Importare (azione di Marco, quando vuole) `smarthome-backup-20260906-173548-devgroup-connectedto-fix.json`
+      da Downloads con Restore from file, per compilare Dev. Group/Connected to sui device reali.
+- [ ] Decidere a cosa far puntare i "Connection Hub" orfani trovati il 2026-09-06: HomeyPro→Homey Pro
+      e Mac Mini→MF Mac sembrano ovvi, Samsung TV→? resta ambiguo (Soggiorno o Camera).
+- [ ] Verificare dal vivo tab "Fields & Help" e riorganizzazione di Network & Connectivity (sessione
+      2026-09-06, mai testati da Marco).
 
 - [ ] Verificare dal vivo lo scenario di conflitto su Azure SQL (due sessioni che salvano sulla
       stessa risorsa quasi in contemporanea) — non ancora testato, solo verificato su OneDrive in
@@ -357,11 +420,6 @@
       pattern a insiemi finiti chiaro/scuro, non ancora estese.
 - [ ] Nessun vero switch chiaro/scuro a runtime: il tema Scuro è modificabile e salvato in Colori ma
       non ancora "attivabile" per l'app intera (serve un controllo Tema come in Incarichi).
-- [ ] Connessione OneDrive automatica solo se già stabilita nella stessa sessione: visitando
-      Devices poi Tabelle/Config nella stessa pagina la sezione successiva non "eredita"
-      automaticamente la connessione della prima nello stesso caricamento (serve un secondo click,
-      senza popup di login) — possibile consolidamento futuro in un unico stato di connessione a
-      livello app.
 - [ ] Criticità e Priorità intervento: rimandati di proposito (dati Excel non assestati, vedi sopra),
       da ripensare insieme quando i dati saranno chiari.
 - [ ] 5 dispositivi presenti nell'Excel ma non nell'app (Aqara Hub, AqaraCamera, AqaraSoggiorno,

@@ -33,6 +33,7 @@ const TABLE_DEFS = [
   ] },
   { id: 'managingApp', title: 'Managing App', kind: 'label', devicesFields: [{ field: 'managingApp', type: 'scalar' }] },
   { id: 'ssid', title: 'SSID', kind: 'label', devicesFields: [{ field: 'ssid', type: 'scalar' }] },
+  { id: 'connectionSpeed', title: 'Connection Speed', kind: 'label', devicesFields: [{ field: 'connectionSpeed', type: 'scalar' }] },
   { id: 'devCategory', title: 'Category', kind: 'labelHost', devicesFields: [{ field: 'devCategory', type: 'scalar' }] },
   { id: 'devZone', title: 'Zone', kind: 'labelHost', devicesFields: [{ field: 'devZone', type: 'scalar' }] },
   { id: 'devType', title: 'Type', kind: 'labelHost', devicesFields: [{ field: 'devType', type: 'scalar' }] },
@@ -51,6 +52,10 @@ const TABLE_DEFAULTS = {
     'Govee Home', 'Homey Pro', 'Hue', 'MacOS', 'Meross', 'Mova', 'Netatmo', 'None', 'Onecta Daikin', 'Orbi',
     'Ring', 'Samsung TV (itself)', 'Sonos', 'Synology DSM 7.3.2', 'Tuya', 'Withings', 'eWeLink', 'iOS', 'iPadOS'],
   ssid: ['ORBIMF', 'ORBIMF-IoT', 'ORBIMF-IoT-AP'],
+  // Nessun valore già in uso da riprendere (era un campo libero fino ad ora, vedi
+  // conversione a tendina del 2026-09-06): punto di partenza generico, da
+  // completare qui in Tables con i valori realmente in uso.
+  connectionSpeed: ['10 Mbps', '100 Mbps', '1 Gbps'],
   // label+host: stessi elenchi già usati per generare l'Host Name.
   devCategory: DEV_CATEGORIES,
   devZone: DEV_ZONES,

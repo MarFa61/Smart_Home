@@ -137,6 +137,7 @@ function renderTabelleTabsArea() {
       switchTabelleTab(def.id);
     });
     tabsBar.appendChild(tabBtn);
+    attachFieldHelpIcon(tabBtn, `tables.${def.id}`);
 
     const content = document.createElement('div');
     content.className = 'tabelle-tab-content' + (i === 0 ? ' active' : '');
@@ -303,11 +304,12 @@ async function saveTabelleTab(def) {
 async function loadAndShowTabelle() {
   await tablesStore.load();
   if (devicesStore.devices.length === 0) await devicesStore.load();
+  // Serve a renderTabelleTabsArea() per le icone ⓘ (helpFieldsStore vive in
+  // config.json) anche se l'utente non è mai passato dal tab Fields & Help.
+  if (!configStore._loaded) await configStore.load();
   renderTabelleTabsArea();
 
   setConnStatusIcon(document.getElementById('tabelleConnStatus'), true, `Connected to ${appStorage.providerName} (${appStorage.connectedAccountEmail()}).`);
-  document.getElementById('btnTabelleConnect').style.display = 'none';
-  document.getElementById('btnTabelleDisconnect').style.display = 'inline-block';
   document.getElementById('tabelleConnectPlaceholder').style.display = 'none';
   document.getElementById('tabelleTabsArea').style.display = 'flex';
 }
@@ -316,28 +318,19 @@ document.addEventListener('DOMContentLoaded', () => {
   registerUnsavedChangesChecker(checkTabelleUnsavedChanges);
   setConnStatusIcon(document.getElementById('tabelleConnStatus'), false, `Not connected to ${appStorage.providerName}.`);
 
-  document.getElementById('btnTabelleConnect').addEventListener('click', async () => {
-    try {
-      document.getElementById('tabelleConnStatus').textContent = 'Connecting…';
-      await appStorage.connect();
-      await loadAndShowTabelle();
-    } catch (error) {
-      document.getElementById('tabelleConnStatus').textContent = `Connection error: ${error.message}`;
+  // Il Connect/Disconnect vive solo in Config (connessione unica per tutta l'app):
+  // qui si reagisce ai cambi di stato decisi lì, senza pulsanti propri.
+  onStorageConnectionChange(connected => {
+    if (connected) {
+      loadAndShowTabelle();
+    } else {
+      setConnStatusIcon(document.getElementById('tabelleConnStatus'), false, `Not connected to ${appStorage.providerName}.`);
+      document.getElementById('tabelleTabsArea').style.display = 'none';
+      document.getElementById('tabelleConnectPlaceholder').style.display = 'block';
     }
   });
 
-  document.getElementById('btnTabelleDisconnect').addEventListener('click', async () => {
-    await appStorage.disconnect();
-    setConnStatusIcon(document.getElementById('tabelleConnStatus'), false, `Not connected to ${appStorage.providerName}.`);
-    document.getElementById('btnTabelleConnect').style.display = 'inline-block';
-    document.getElementById('btnTabelleDisconnect').style.display = 'none';
-    document.getElementById('tabelleTabsArea').style.display = 'none';
-    document.getElementById('tabelleConnectPlaceholder').style.display = 'block';
-  });
-
-  // Connessione automatica: se una sessione OneDrive era già attiva (anche stabilita
-  // da un'altra sezione), si salta il pulsante "Connetti" e si carica direttamente.
-  appStorageReady.then(async giaConnesso => {
-    if (giaConnesso || appStorage.isConnected()) await loadAndShowTabelle();
-  });
+  // Connessione automatica: se una sessione era già attiva (anche stabilita da
+  // un'altra sezione prima di questo DOMContentLoaded), si carica direttamente.
+  autoReconnectAndLoad(loadAndShowTabelle);
 });

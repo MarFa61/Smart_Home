@@ -172,6 +172,20 @@ async function loadAndShowConfig() {
   // senza mai passare da Devices, esporterebbe un elenco dispositivi vuoto).
   if (devicesStore.devices.length === 0) await devicesStore.load();
 
+  // Icone ⓘ sui controlli di Backup & Restore/Colors — vedi field-help-icon.js.
+  attachFieldHelpIcon(document.getElementById('btnBackupDownload'), 'config.backup.download');
+  attachFieldHelpIcon(document.getElementById('lblRestoreFile'), 'config.backup.restore');
+  attachFieldHelpIcon(document.getElementById('btnColoriSave'), 'config.colors.save');
+  attachFieldHelpIcon(document.getElementById('btnColoriResetChiaro'), 'config.colors.resetLight');
+  attachFieldHelpIcon(document.getElementById('btnColoriResetScuro'), 'config.colors.resetDark');
+
+  // Il tab Fields & Help si popola solo qui, non al DOMContentLoaded: prima della
+  // connessione configStore.config è ancora il segnaposto di default (vedi
+  // fields-help-ui.js).
+  renderFieldsHelpFilters();
+  renderFieldsHelpTable();
+  document.getElementById('fieldsHelpEnabled').checked = helpFieldsStore.enabled;
+
   setConnStatusIcon(document.getElementById('configConnStatus'), true, `Connected to ${appStorage.providerName} (${appStorage.connectedAccountEmail()}).`);
   document.getElementById('btnConfigConnect').style.display = 'none';
   document.getElementById('btnConfigDisconnect').style.display = 'inline-block';
@@ -220,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('configConnStatus').textContent = 'Connecting…';
       await appStorage.connect();
       await loadAndShowConfig();
+      notifyStorageConnectionChange(true);
     } catch (error) {
       document.getElementById('configConnStatus').textContent = `Connection error: ${error.message}`;
     }
@@ -232,6 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnConfigDisconnect').style.display = 'none';
     document.getElementById('configTabsArea').style.display = 'none';
     document.getElementById('configConnectPlaceholder').style.display = 'block';
+    notifyStorageConnectionChange(false);
   });
 
   document.getElementById('btnColoriSave').addEventListener('click', saveColori);
@@ -252,9 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnColoriResetChiaro').addEventListener('click', () => resetTemaEShow('chiaro', 'Light'));
   document.getElementById('btnColoriResetScuro').addEventListener('click', () => resetTemaEShow('scuro', 'Dark'));
 
-  // Connessione automatica: se una sessione OneDrive era già attiva (anche stabilita
+  // Connessione automatica: se una sessione era già attiva (anche stabilita
   // da un'altra sezione), si salta il pulsante "Connetti" e si carica direttamente.
-  appStorageReady.then(async giaConnesso => {
-    if (giaConnesso || appStorage.isConnected()) await loadAndShowConfig();
-  });
+  autoReconnectAndLoad(loadAndShowConfig);
 });

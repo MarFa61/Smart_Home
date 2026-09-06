@@ -24,15 +24,22 @@ function detectAppleDeviceKind() {
 const APP_DEVICE_KIND = detectAppleDeviceKind();
 const CONN_STATUS_ICON_VERSION = 15;
 
+/** null se il dispositivo non è tra i 3 riconosciuti (vedi detectAppleDeviceKind). */
+function connStatusIconUrl(connected) {
+  if (!APP_DEVICE_KIND) return null;
+  const state = connected ? 'connesso' : 'non-connesso';
+  return `./img/conn-status/${state}-${APP_DEVICE_KIND}.png?v=${CONN_STATUS_ICON_VERSION}`;
+}
+
 function setConnStatusIcon(el, connected, fallbackText) {
-  if (!APP_DEVICE_KIND) {
+  const src = connStatusIconUrl(connected);
+  if (!src) {
     el.textContent = fallbackText;
     return;
   }
-  const state = connected ? 'connesso' : 'non-connesso';
   el.innerHTML = '';
   const img = document.createElement('img');
-  img.src = `./img/conn-status/${state}-${APP_DEVICE_KIND}.png?v=${CONN_STATUS_ICON_VERSION}`;
+  img.src = src;
   img.alt = connected ? 'Connected to OneDrive' : 'Not connected to OneDrive';
   img.title = fallbackText;
   img.className = 'conn-status-icon';

@@ -300,6 +300,26 @@ document.addEventListener('click', () => {
   }
 });
 
+// Se il valore salvato del device non è tra le opzioni attuali della tendina (es.
+// un vecchio Dev. Group non più in DEV_GROUPS, o una voce di Tabelle rinominata/
+// rimossa da allora), lo aggiunge come opzione extra invece di lasciare il campo
+// vuoto — altrimenti sembra che il dato sia andato perso, mentre è solo "fuori
+// lista" (bug segnalato da Marco il 2026-09-06: Dev. Group compariva vuoto per
+// molti device). L'opzione extra è ricreata ad ogni apertura del dialog e rimossa
+// prima, per non accumularsi da un device all'altro nella stessa sessione.
+function setSelectValueKeepingUnknown(selectEl, value) {
+  selectEl.querySelectorAll('option[data-unknown-value]').forEach(opt => opt.remove());
+  selectEl.value = value || '';
+  if (value && selectEl.value !== value) {
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = `${value} (not in list)`;
+    opt.dataset.unknownValue = 'true';
+    selectEl.appendChild(opt);
+    selectEl.value = value;
+  }
+}
+
 function populateSelect(selectEl, options, includeBlank) {
   selectEl.innerHTML = '';
   if (includeBlank) {
@@ -446,22 +466,7 @@ function showIpSuggestPopover(inputEl, allIps) {
   popover.showPopover();
 }
 
-// Avviso quando manca il prerequisito per i suggerimenti IP: Dev. Group non ancora
-// scelto per niente (diverso da Dinamico/TBD/n/a, che semplicemente non hanno un
-// blocco riservato — caso normale, nessun avviso). Reso esplicito qui invece di
-// lasciare che il campo IP torni silenziosamente testo libero senza spiegazioni.
-function updateIpGroupHint() {
-  const hint = document.getElementById('devIpGroupHint');
-  if (!editingDevice.devGroup) {
-    hint.textContent = 'Set the Dev. Group (tab "Configuration & Groups") to get free IP suggestions within the reserved block.';
-    hint.style.display = 'block';
-  } else {
-    hint.style.display = 'none';
-  }
-}
-
 function renderConnectionsList() {
-  updateIpGroupHint();
   const container = document.getElementById('devConnectionsList');
   container.innerHTML = '';
   // Senza Dev. Group non c'è un blocco IP di riferimento: i campi restano bloccati
@@ -564,40 +569,56 @@ function switchDeviceTab(tabId) {
   document.querySelectorAll('#deviceDlg .tab-content').forEach(content => {
     content.classList.toggle('active', content.id === tabId);
   });
+  syncDeviceDialogTabHeight();
+}
+
+// La finestra non deve cambiare altezza passando da un tab all'altro: si fissa
+// l'altezza minima dei tab a quella richiesta da "Status & Notes" (oggi il più alto
+// dei 4), misurandolo al volo — anche se non è quello attivo — per non dover
+// mantenere a mano un valore in px se in futuro i suoi campi cambiano. Richiede che
+// la dialog sia già aperta (showModal): da chiusa i suoi contenuti hanno
+// display:none e scrollHeight risulterebbe sempre 0.
+function syncDeviceDialogTabHeight() {
+  const statTab = document.getElementById('dtab-stat');
+  const wasActive = statTab.classList.contains('active');
+  if (!wasActive) statTab.classList.add('active');
+  const height = statTab.scrollHeight;
+  if (!wasActive) statTab.classList.remove('active');
+  document.getElementById('deviceDlg').style.setProperty('--device-dlg-tab-min-height', `${height}px`);
 }
 
 function openDeviceDialog(device) {
   editingDevice = JSON.parse(JSON.stringify(device)); // copia di lavoro: Annulla non deve toccare lo store
+  document.getElementById('deviceDlgValidation').style.display = 'none';
   document.getElementById('deviceDlgConflicts').style.display = 'none';
 
   const isNew = !devicesStore.devices.some(d => d.id === device.id);
   document.getElementById('deviceDlgTitle').textContent = isNew ? 'New Device' : `Edit: ${device.nickname || '(no name)'}`;
 
   document.getElementById('devNickname').value = editingDevice.nickname;
-  document.getElementById('devMarca').value = editingDevice.marca;
+  setSelectValueKeepingUnknown(document.getElementById('devMarca'), editingDevice.marca);
   document.getElementById('devModello').value = editingDevice.modello;
-  document.getElementById('devTipoDispositivo').value = editingDevice.tipoDispositivo;
-  document.getElementById('devManagingApp').value = editingDevice.managingApp;
+  setSelectValueKeepingUnknown(document.getElementById('devTipoDispositivo'), editingDevice.tipoDispositivo);
+  setSelectValueKeepingUnknown(document.getElementById('devManagingApp'), editingDevice.managingApp);
   populateSelect(document.getElementById('devPhisicalHub'), hubNicknameOptions(editingDevice.id), true);
-  document.getElementById('devPhisicalHub').value = editingDevice.phisicalHub;
-  document.getElementById('devProtocolloConnessione').value = editingDevice.protocolloConnessione;
+  setSelectValueKeepingUnknown(document.getElementById('devPhisicalHub'), editingDevice.phisicalHub);
+  setSelectValueKeepingUnknown(document.getElementById('devProtocolloConnessione'), editingDevice.protocolloConnessione);
   if (!Array.isArray(editingDevice.protocolli)) editingDevice.protocolli = [];
   renderProtocolliList();
 
-  document.getElementById('devSSID').value = editingDevice.ssid;
-  document.getElementById('devConnSpeed').value = editingDevice.connectionSpeed;
-  document.getElementById('devConnectedTo').value = editingDevice.connectedTo;
+  setSelectValueKeepingUnknown(document.getElementById('devSSID'), editingDevice.ssid);
+  setSelectValueKeepingUnknown(document.getElementById('devConnSpeed'), editingDevice.connectionSpeed);
+  setSelectValueKeepingUnknown(document.getElementById('devConnectedTo'), editingDevice.connectedTo);
   renderConnectionsList();
 
-  document.getElementById('devGroup').value = editingDevice.devGroup;
-  document.getElementById('devCategory').value = editingDevice.devCategory;
-  document.getElementById('devZone').value = editingDevice.devZone;
-  document.getElementById('devType').value = editingDevice.devType;
+  setSelectValueKeepingUnknown(document.getElementById('devGroup'), editingDevice.devGroup);
+  setSelectValueKeepingUnknown(document.getElementById('devCategory'), editingDevice.devCategory);
+  setSelectValueKeepingUnknown(document.getElementById('devZone'), editingDevice.devZone);
+  setSelectValueKeepingUnknown(document.getElementById('devType'), editingDevice.devType);
   document.getElementById('devId').value = editingDevice.devId;
   updateHostNamePreview();
 
-  document.getElementById('devAvanzamento').value = editingDevice.avanzamento;
-  document.getElementById('devDisponibile').checked = editingDevice.disponibileOra;
+  setSelectValueKeepingUnknown(document.getElementById('devAvanzamento'), editingDevice.avanzamento);
   document.getElementById('devHomey').checked = editingDevice.collegatoHomey;
   document.getElementById('devHomeyNote').value = editingDevice.collegatoHomeyNote;
   document.getElementById('devHomeKit').checked = editingDevice.integratoHomeKit;
@@ -606,8 +627,11 @@ function openDeviceDialog(device) {
   document.getElementById('devAutomazioniNote').value = editingDevice.usatoAutomazioniNote;
   document.getElementById('devNote').value = editingDevice.note;
 
-  switchDeviceTab('dtab-gen');
+  applyRequiredFieldStyling();
+  attachDeviceDialogHelpIcons();
+
   document.getElementById('deviceDlg').showModal();
+  switchDeviceTab('dtab-gen');
 }
 
 function collectFormIntoEditingDevice() {
@@ -632,7 +656,6 @@ function collectFormIntoEditingDevice() {
   editingDevice.devId = document.getElementById('devId').value.trim();
 
   editingDevice.avanzamento = document.getElementById('devAvanzamento').value;
-  editingDevice.disponibileOra = document.getElementById('devDisponibile').checked;
   editingDevice.collegatoHomey = document.getElementById('devHomey').checked;
   editingDevice.collegatoHomeyNote = document.getElementById('devHomeyNote').value.trim();
   editingDevice.integratoHomeKit = document.getElementById('devHomeKit').checked;
@@ -642,8 +665,66 @@ function collectFormIntoEditingDevice() {
   editingDevice.note = document.getElementById('devNote').value.trim();
 }
 
+// Obbligatorietà dei campi del dialog Device: non più fissa nel codice, ma decisa
+// a runtime dal tab "Fields & Help" di Config (helpFieldsStore.isMandatory(),
+// DEVICE_HELP_FIELDS — vedi HelpFieldsStore.js). "Supported protocols" e
+// "Connections (IP)" sono liste, non campi scalari: isDeviceFieldFilled() le
+// tratta di conseguenza (bastano un protocollo/un IP compilato).
+function isDeviceFieldFilled(field, device) {
+  const value = device[field.editingDeviceKey];
+  if (field.editingDeviceKey === 'connections') return Array.isArray(value) && value.some(c => c.ip);
+  if (Array.isArray(value)) return value.some(v => v);
+  return !!value;
+}
+
+// f.editingDeviceKey manca solo per i campi calcolati (es. Host Name, generato al
+// volo da computeHostName): non hanno un valore proprio da validare, quindi
+// restano fuori da Mandatory/Save anche se qualcuno alza lo switch nella tabella
+// di Fields & Help per quella riga.
+function findMissingRequiredFields() {
+  return DEVICE_HELP_FIELDS
+    .filter(f => f.editingDeviceKey && helpFieldsStore.isMandatory(f.key) && !isDeviceFieldFilled(f, editingDevice))
+    .map(f => ({ label: f.label, tab: f.tab }));
+}
+
+// Bordo rosso (classe CSS "required-field" sul .dlg-form-group, vedi theme.css) su
+// ogni campo attualmente obbligatorio: richiamata all'apertura del dialog Device e
+// dopo un cambio di Mandatory in Fields & Help, per riflettere subito il nuovo
+// stato alla prossima apertura.
+function applyRequiredFieldStyling() {
+  DEVICE_HELP_FIELDS.forEach(f => {
+    const el = document.getElementById(f.domId);
+    const group = el && el.closest('.dlg-form-group');
+    if (!group) return;
+    const mandatory = !!f.editingDeviceKey && helpFieldsStore.isMandatory(f.key);
+    group.classList.toggle('required-field', mandatory);
+  });
+}
+
+// Icone ⓘ di aiuto accanto a ciascuna label del dialog Device (vedi
+// field-help-icon.js): richiamata all'apertura, legge sempre il testo più
+// recente da helpFieldsStore.
+function attachDeviceDialogHelpIcons() {
+  DEVICE_HELP_FIELDS.forEach(f => {
+    const el = document.getElementById(f.domId);
+    const group = el && el.closest('.dlg-form-group');
+    const label = group && group.querySelector('label');
+    if (label) attachFieldHelpIcon(label, f.key);
+  });
+}
+
 async function saveEditingDevice() {
   collectFormIntoEditingDevice();
+
+  const validationBox = document.getElementById('deviceDlgValidation');
+  const missing = findMissingRequiredFields();
+  if (missing.length > 0) {
+    switchDeviceTab(missing[0].tab);
+    validationBox.style.display = 'block';
+    validationBox.innerHTML = `⚠️ Required fields missing: ${missing.map(m => m.label).join(', ')}.`;
+    return;
+  }
+  validationBox.style.display = 'none';
 
   const conflicts = devicesStore.findConflicts(editingDevice);
   const conflictsBox = document.getElementById('deviceDlgConflicts');
@@ -709,6 +790,7 @@ function populateDeviceFormSelects() {
   // modifica (esclude sé stesso), viene rifatto in openDeviceDialog().
   populateSelect(document.getElementById('devManagingApp'), tablesStore.labels('managingApp'), true);
   populateSelect(document.getElementById('devSSID'), tablesStore.labels('ssid'), true);
+  populateSelect(document.getElementById('devConnSpeed'), tablesStore.labels('connectionSpeed'), true);
   populateSelect(document.getElementById('devGroup'), DEV_GROUPS, true);
   populateSelect(document.getElementById('devConnectedTo'), DEV_CONNECTED_TO, true);
 }
@@ -785,38 +867,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('devicesSearch').addEventListener('input', renderDevicesTable);
 
-  document.getElementById('btnDevicesConnect').addEventListener('click', async () => {
-    try {
-      devicesStatusEl().textContent = 'Connecting…';
-      await appStorage.connect();
-      await loadAndShowDevices();
-    } catch (error) {
-      devicesStatusEl().textContent = `Connection error: ${error.message}`;
+  // Il Connect/Disconnect vive solo in Config (connessione unica per tutta l'app):
+  // qui si reagisce ai cambi di stato decisi lì, senza pulsanti propri.
+  onStorageConnectionChange(connected => {
+    if (connected) {
+      loadAndShowDevices();
+    } else {
+      devicesStore.devices = [];
+      renderDevicesTable();
+      setConnStatusIcon(devicesStatusEl(), false, `Not connected to ${appStorage.providerName}.`);
+      document.getElementById('btnDeviceNew').style.display = 'none';
     }
   });
 
-  document.getElementById('btnDevicesDisconnect').addEventListener('click', async () => {
-    await appStorage.disconnect();
-    devicesStore.devices = [];
-    renderDevicesTable();
-    setConnStatusIcon(devicesStatusEl(), false, `Not connected to ${appStorage.providerName}.`);
-    document.getElementById('btnDevicesConnect').style.display = 'inline-block';
-    document.getElementById('btnDevicesDisconnect').style.display = 'none';
-    document.getElementById('btnDeviceNew').style.display = 'none';
-  });
-
-  // Connessione automatica: se una sessione OneDrive era già attiva, si salta del
-  // tutto il pulsante "Connetti" e si carica direttamente l'elenco.
-  appStorageReady.then(async giaConnesso => {
-    if (giaConnesso) await loadAndShowDevices();
-  });
+  // Connessione automatica: se una sessione era già attiva (anche stabilita da
+  // un'altra sezione prima di questo DOMContentLoaded), si carica direttamente
+  // l'elenco senza aspettare un'azione dell'utente in Config.
+  autoReconnectAndLoad(loadAndShowDevices);
 });
 
 async function loadAndShowDevices() {
-  setConnStatusIcon(devicesStatusEl(), true, `Connected to ${appStorage.providerName} (${appStorage.connectedAccountEmail()}).`);
-  document.getElementById('btnDevicesConnect').style.display = 'none';
-  document.getElementById('btnDevicesDisconnect').style.display = 'inline-block';
-  document.getElementById('btnDeviceNew').style.display = 'inline-block';
   // Senza questo, le tendine del dialog Device (popolate una sola volta al
   // DOMContentLoaded, prima di qualunque connessione) restano sui valori di default
   // hardcoded invece di quelli reali salvati in Tabelle — bug reale: un utente che apre
@@ -827,6 +897,19 @@ async function loadAndShowDevices() {
     await tablesStore.load();
     populateDeviceFormSelects();
   }
+  // Serve anche qui, non solo aperto da Config: helpFieldsStore (testi di aiuto e
+  // obbligatorietà dinamica dei campi) vive in config.json, e il dialog Device deve
+  // rifletterla anche se l'utente non è mai passato dal tab Fields & Help in questa
+  // sessione.
+  if (!configStore._loaded) await configStore.load();
   await devicesStore.load();
   renderDevicesTable();
+
+  // L'icona passa a "connesso" solo qui, a caricamento riuscito — non prima: finché il
+  // token/i dati non sono confermati non è davvero connesso (bug reale: mostrava
+  // "connesso" subito, prima ancora di sapere se il caricamento sarebbe riuscito,
+  // mentre Tables lo mostrava solo a caricamento finito — le due sezioni erano
+  // temporaneamente incoerenti tra loro dopo un reload).
+  setConnStatusIcon(devicesStatusEl(), true, `Connected to ${appStorage.providerName} (${appStorage.connectedAccountEmail()}).`);
+  document.getElementById('btnDeviceNew').style.display = 'inline-block';
 }
