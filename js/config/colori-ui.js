@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
   registerUnsavedChangesChecker(checkColoriUnsavedChanges);
   setConnStatusIcon(document.getElementById('configConnStatus'), false, `Not connected to ${appStorage.providerName}.`);
 
-  // Un solo provider disponibile oggi (Azure SQL, vedi AVAILABLE_STORAGE_PROVIDERS in
+  // Un solo provider disponibile oggi (PostgreSQL, vedi AVAILABLE_STORAGE_PROVIDERS in
   // app-storage.js): niente da scegliere, si mostra solo il nome. Se in futuro
   // AVAILABLE_STORAGE_PROVIDERS torna ad averne più di uno, qui compare da sola una
   // tendina — nessun'altra modifica necessaria in questo file.

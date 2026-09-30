@@ -13,15 +13,17 @@
    disponibili (AVAILABLE_STORAGE_PROVIDERS sotto) — per riattivarlo
    basta aggiungere una riga lì, la UI in Config (colori-ui.js) mostra
    da sola un selettore invece del solo nome quando ce n'è più di uno.
+   Stessa sorte per Azure SQL (AzureSqlProvider.js), sostituito da
+   PostgreSQL locale sul minipc Proxmox (PostgresProvider.js).
    ========================================================= */
 
 const STORAGE_PROVIDER_KEY = 'smarthome.storageProvider';
 
 // Unica voce oggi: nessuna vera scelta, quindi Config mostra il nome fisso invece di un
-// tendina — vedi colori-ui.js. Per riabilitare OneDrive: aggiungere
-// { id: 'onedrive', label: 'OneDrive' } qui.
+// tendina — vedi colori-ui.js. Per riabilitare OneDrive o Azure SQL: aggiungere
+// { id: 'onedrive', label: 'OneDrive' } o { id: 'azuresql', label: 'Azure SQL' } qui.
 const AVAILABLE_STORAGE_PROVIDERS = [
-  { id: 'azuresql', label: 'Azure SQL' },
+  { id: 'postgres', label: 'PostgreSQL' },
 ];
 
 // Ignora un valore salvato che non è (più) tra quelli disponibili — es. "onedrive" rimasto
@@ -38,6 +40,7 @@ function setSelectedStorageProviderId(id) {
 }
 
 function createStorageProvider(id) {
+  if (id === 'postgres') return new PostgresProvider(STORAGE_CONFIG);
   if (id === 'azuresql') return new AzureSqlProvider(STORAGE_CONFIG);
   return new OneDriveProvider(STORAGE_CONFIG);
 }

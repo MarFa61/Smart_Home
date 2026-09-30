@@ -14,6 +14,10 @@
    Azure assegna alle nuove Function App un hostname con suffisso
    univoco casuale (vedi "defaultHostName" nella Panoramica della
    risorsa su portal.azure.com se va rigenerato).
+   postgres: backend sul container "dbserver" del minipc Proxmox, che
+   serve anche il frontend — percorso relativo, stessa origine.
+   Azure SQL messo da parte (vedi app-storage.js), config lasciata
+   intatta per poterlo riattivare.
    ========================================================= */
 
 const STORAGE_CONFIG = {
@@ -22,5 +26,8 @@ const STORAGE_CONFIG = {
   azureSql: {
     apiScope: 'api://c7e2df7a-9f17-41da-9554-7fe7ebaac5ab/user_impersonation',
     apiBaseUrl: 'https://smarthome-api-mfasani-bxhvebfdh8gmbade.swedencentral-01.azurewebsites.net/api',
+  },
+  postgres: {
+    apiBaseUrl: './api',
   },
 };
