@@ -414,8 +414,11 @@
 - **Frontend**: nuovo `js/storage/PostgresProvider.js`, unico provider disponibile. Azure SQL
   messo da parte come già OneDrive (`AzureSqlProvider.js` resta nel codice). L'app si apre su
   **http://10.0.0.27/**; la versione GitHub Pages non funziona più (https verso API di rete locale).
-- **Deploy**: `Smart Home/deploy-minipc.sh` (fuori dai repository) copia Backend/ e Codice/ sul
-  container via rsync e riavvia il servizio.
+- **Deploy**: `Backend/scripts/deploy-minipc.sh` (repository privato del backend) copia Backend/ e
+  Codice/ sul container via rsync e riavvia il servizio.
+- **Riorganizzazione cartella**: `avvia-server-locale.sh` spostato in `Backend/scripts/` (serve solo
+  i file statici, senza API: l'app da lì non si connette al DB); `Icons/` spostata in `Codice/Icons/`
+  (esclusa dal deploy). `DB Backup/` e `Varie/` restano fuori da GitHub (dati reali).
 - **Dati**: le 3 risorse (`devices.json` con 62 device, `tables.json`, `config.json` con
   colorOverrides e helpFields) copiate 1:1 da Azure SQL e verificate identiche dopo la rilettura.
   Dump pre-migrazione in `DB Backup/azuresql-dump-20260930-prima-migrazione-postgres.json`.
