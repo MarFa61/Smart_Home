@@ -1,4 +1,4 @@
-# TODO — Smart Home (analisi Excel, architettura, prima versione, pubblicazione GitHub Pages, import dati reali, rifinitura colonne Devices, migrazione backend verso Azure SQL, connessione unica per l'app, tab "Fields & Help", riorganizzazione dialog Device)
+# TODO — Smart Home (analisi Excel, architettura, prima versione, pubblicazione GitHub Pages, import dati reali, rifinitura colonne Devices, migrazione backend verso Azure SQL, connessione unica per l'app, tab "Fields & Help", riorganizzazione dialog Device, migrazione a PostgreSQL locale sul minipc)
 
 ## Fatto — sessione 2026-08-30
 
@@ -396,8 +396,41 @@
 - **Non ancora testato da Marco**: nessuna delle modifiche di questa sessione (Fields & Help,
   riorganizzazione tab, `setSelectValueKeepingUnknown`) è stata verificata dal vivo.
 
+## Fatto — sessione 2026-09-30 — Migrazione da Azure SQL a PostgreSQL locale (minipc Proxmox)
+
+- **Motivo**: Azure lento (risveglio del DB serverless) e login MSAL fallito con "redirect_uri non
+  valido"; l'app è usata solo da casa. Scelto PostgreSQL invece di SQLite per avere un unico
+  sistema con Cruise Surfer (già su PostgreSQL), che in futuro potrebbe spostarsi sullo stesso
+  container.
+- **Infrastruttura**: minipc Lenovo M910q (i5-6500T, 16 GB) con Proxmox (nodo `pve`, 10.0.0.25).
+  RAM della VM Home Assistant (100, 10.0.0.26) ridotta da 14 a 10 GB per evitare overcommit.
+  Nuovo container LXC 101 `dbserver` (Debian 13, 2 core, 2 GB RAM, 16 GB disco, IP fisso
+  **10.0.0.27**, avvio automatico) con PostgreSQL 17 e Node.js 20.
+- **Backend** (`smarthome-backend`): da Azure Functions + `mssql` a server Express + `pg`, servizio
+  systemd `smarthome` sulla porta 80. Stesso contratto `GET/PUT /api/resources/{key}`; la versione
+  per la concorrenza ottimistica è ora un contatore intero (prima `ROWVERSION`). Serve anche il
+  frontend sulla stessa origine. Nessuna autenticazione (solo rete di casa). Connessione al DB via
+  socket Unix con autenticazione peer, nessuna password. Rimosso il workflow di deploy su Azure.
+- **Frontend**: nuovo `js/storage/PostgresProvider.js`, unico provider disponibile. Azure SQL
+  messo da parte come già OneDrive (`AzureSqlProvider.js` resta nel codice). L'app si apre su
+  **http://10.0.0.27/**; la versione GitHub Pages non funziona più (https verso API di rete locale).
+- **Deploy**: `Smart Home/deploy-minipc.sh` (fuori dai repository) copia Backend/ e Codice/ sul
+  container via rsync e riavvia il servizio.
+- **Dati**: le 3 risorse (`devices.json` con 62 device, `tables.json`, `config.json` con
+  colorOverrides e helpFields) copiate 1:1 da Azure SQL e verificate identiche dopo la rilettura.
+  Dump pre-migrazione in `DB Backup/azuresql-dump-20260930-prima-migrazione-postgres.json`.
+  Attenzione: il Backup dell'app non include `helpFields`.
+- **Verificato da Claude**: smoke test del DB, risposte API, conflitto 412, ripartenza del servizio
+  dopo il riavvio del container. **Non ancora testato dal vivo da Marco.**
+
 ## Da fare — prossimo passo
 
+- [ ] Verificare dal vivo l'app su http://10.0.0.27/ (Connect in Config, dati, salvataggio).
+- [ ] Quando convinto: spegnere/cancellare le risorse Azure (Function App smarthome-api-mfasani,
+      server SQL smarthome-sql-mfasani con regola firewall per 151.32.203.22, app registration
+      Entra) e disattivare GitHub Pages, ora non più funzionante.
+- [ ] Facoltativo: revocare la chiave SSH di Claude (riga "claude-code@mac-marco" in
+      /root/.ssh/authorized_keys su `pve` e su `dbserver`).
 - [ ] Importare (azione di Marco, quando vuole) `smarthome-backup-20260906-173548-devgroup-connectedto-fix.json`
       da Downloads con Restore from file, per compilare Dev. Group/Connected to sui device reali.
 - [ ] Decidere a cosa far puntare i "Connection Hub" orfani trovati il 2026-09-06: HomeyPro→Homey Pro
@@ -405,7 +438,7 @@
 - [ ] Verificare dal vivo tab "Fields & Help" e riorganizzazione di Network & Connectivity (sessione
       2026-09-06, mai testati da Marco).
 
-- [ ] Verificare dal vivo lo scenario di conflitto su Azure SQL (due sessioni che salvano sulla
+- [ ] Verificare dal vivo lo scenario di conflitto su PostgreSQL (due sessioni che salvano sulla
       stessa risorsa quasi in contemporanea) — non ancora testato, solo verificato su OneDrive in
       sessioni precedenti.
 
@@ -415,6 +448,7 @@
       (l'URL esatto in barra indirizzi deve corrispondere al redirect URI registrato su Entra ID,
       dovrebbe essere `http://localhost:5500/`).
       Non ancora risolto, interrotto per passare ad altro.
+      Riscontrato anche con Azure SQL il 2026-09-30; non più rilevante dopo il passaggio a PostgreSQL.
 
 - [ ] Altre "scene" di Colori oltre a "Finestra e tabella" (es. Bottoni, Badge, Campi form) — stesso
       pattern a insiemi finiti chiaro/scuro, non ancora estese.
