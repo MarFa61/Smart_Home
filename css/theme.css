@@ -1357,3 +1357,62 @@ html.device-iphone .compact-table td {
 html.device-iphone .placeholder {
   padding: 16px;
 }
+
+/* iPhone: dialog Device a tutto schermo. Intestazione, barra dei tab e pulsanti restano
+   fissi, scorre solo il contenuto del tab attivo, che prende tutta l'altezza rimasta
+   (niente max-height al 55% né altezza minima calcolata da syncDeviceDialogTabHeight:
+   l'altezza è già costante perché occupa sempre lo spazio disponibile). */
+html.device-iphone #deviceDlg {
+  width: 100vw;
+  min-width: 0;
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  inset: 0;
+  border-radius: 0;
+  padding: 10px;
+  resize: none;
+}
+
+html.device-iphone #deviceDlg[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+html.device-iphone #deviceDlg .dh h2 {
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+/* Barra dei tab su una sola riga, scorrevole in orizzontale se non ci sta. */
+html.device-iphone #deviceDlg .dlg-tabs {
+  flex-shrink: 0;
+  overflow-x: auto;
+  margin-bottom: 8px;
+}
+
+html.device-iphone #deviceDlg .tab-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+html.device-iphone #deviceDlg .tab-content.active {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+}
+
+html.device-iphone #deviceDlg .foot {
+  flex-shrink: 0;
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+/* 16px: sotto questa soglia Safari su iPhone ingrandisce la pagina toccando un campo
+   (stessa ragione del campo di ricerca). */
+html.device-iphone #deviceDlg input,
+html.device-iphone #deviceDlg select,
+html.device-iphone #deviceDlg textarea {
+  font-size: 16px;
+}
