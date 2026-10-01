@@ -1307,3 +1307,53 @@ html.device-iphone .sidebar-item .icon {
   font-size: 22px;
   width: auto;
 }
+
+/* iPhone: interfaccia compatta — in orizzontale lo spazio che manca è soprattutto in
+   altezza, quindi margini, intestazioni e righe di tabella più bassi. */
+html.device-iphone .content-area {
+  padding: 6px;
+}
+
+html.device-iphone .win {
+  padding: 10px;
+  border-radius: 6px;
+}
+
+html.device-iphone h1 {
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+
+html.device-iphone .page-header-row {
+  margin-bottom: 8px;
+}
+
+html.device-iphone .conn-status-icon {
+  height: 28px;
+}
+
+html.device-iphone .toolbar-grid {
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* 16px e non meno: sotto questa soglia Safari su iPhone ingrandisce la pagina quando
+   si tocca il campo, e non la riduce più all'uscita. */
+html.device-iphone .search {
+  padding: 5px 10px;
+  font-size: 16px;
+}
+
+html.device-iphone .btn {
+  padding: 6px 10px;
+}
+
+html.device-iphone .compact-table th,
+html.device-iphone .compact-table td {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+html.device-iphone .placeholder {
+  padding: 16px;
+}
