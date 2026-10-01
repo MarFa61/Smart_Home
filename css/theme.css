@@ -1061,6 +1061,14 @@ dialog::backdrop {
   height: 100%;
   cursor: col-resize;
   user-select: none;
+  /* Trascinando con il dito sulla maniglia, Safari non deve scorrere la tabella. */
+  touch-action: none;
+}
+
+/* iPad/iPhone: maniglia più larga, per poterla prendere con il dito. */
+html.device-ipad .col-resize-handle,
+html.device-iphone .col-resize-handle {
+  width: 16px;
 }
 
 .col-resize-handle:hover {

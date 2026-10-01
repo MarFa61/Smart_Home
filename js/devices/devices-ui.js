@@ -188,7 +188,8 @@ function renderDevicesHeader() {
 
     const resizeHandle = document.createElement('div');
     resizeHandle.className = 'col-resize-handle';
-    resizeHandle.addEventListener('mousedown', e => startColumnResize(e, col));
+    // Eventi pointer, non mouse: stesso codice per mouse (Mac) e dito (iPad/iPhone).
+    resizeHandle.addEventListener('pointerdown', e => startColumnResize(e, col));
     th.appendChild(resizeHandle);
 
     headerRow.appendChild(th);
@@ -218,13 +219,15 @@ function startColumnResize(e, col) {
     if (colEl) colEl.style.width = `${newWidth}px`;
   }
   function onUp(ev) {
-    document.removeEventListener('mousemove', onMove);
-    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onUp);
     const newWidth = Math.max(50, Math.round(startWidth + (ev.clientX - startX)));
     columnWidthStore.setWidth(col.id, newWidth);
   }
-  document.addEventListener('mousemove', onMove);
-  document.addEventListener('mouseup', onUp);
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', onUp);
+  document.addEventListener('pointercancel', onUp);
 }
 
 function toggleFilterPopover(col, thEl) {
