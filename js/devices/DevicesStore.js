@@ -1,7 +1,7 @@
 /* =========================================================
    STORE IN-MEMORY + PERSISTENZA DEI DEVICES
    Wrapper sopra lo StorageProvider astratto: nessun dettaglio
-   OneDrive qui, solo la risorsa "devices.json" e le regole di
+   del provider qui, solo la risorsa "devices.json" e le regole di
    unicità decise per il modello dati (Nickname, Dev. Id.,
    Host Name generato, IP di ciascuna connessione).
    ========================================================= */

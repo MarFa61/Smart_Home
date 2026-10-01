@@ -1,7 +1,7 @@
 /* =========================================================
    COLOR STORE — equivalente JS di AppColorStore.swift
-   Overrides tenuti in ConfigStore (risorsa config.json su
-   OneDrive), chiave "componente.tema.slot" come in Incarichi.
+   Overrides tenuti in ConfigStore (risorsa config.json nel
+   database), chiave "componente.tema.slot" come in Incarichi.
    ========================================================= */
 
 class ColorStore {

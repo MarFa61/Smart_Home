@@ -2,7 +2,7 @@
    STORE PER LE TABELLE DI SUPPORTO (Avanzamento, Tipo
    dispositivo, Marca, Protocollo, Managing App, SSID,
    Categoria, Zona, Tipo). Stessa logica di DevicesStore/
-   ConfigStore: risorsa "tables.json" su OneDrive, concorrenza
+   ConfigStore: risorsa "tables.json" nel database, concorrenza
    ottimistica via versione.
 
    "Connection Hub" (ex "Phisical Hub") NON è più una di queste tabelle: i suoi valori

@@ -211,10 +211,9 @@ document.addEventListener('DOMContentLoaded', () => {
       select.appendChild(opt);
     });
     select.value = getSelectedStorageProviderId();
-    // Niente disconnect() qui: per OneDrive/Azure SQL userebbe un popup di logout
-    // Microsoft (logoutPopup) che, se bloccato o ignorato, lascia l'await sospeso
-    // per sempre — e con esso anche il salvataggio della scelta e il reload sotto.
-    // Non serve comunque un vero logout per cambiare provider: il reload ricrea da
+    // Niente disconnect() qui: con provider dotati di login (es. il vecchio popup di
+    // logout Microsoft) un await sospeso bloccherebbe il salvataggio della scelta e il
+    // reload sotto. Non serve comunque un vero logout per cambiare provider: il reload ricrea da
     // zero l'istanza corretta in base a localStorage, quella vecchia viene scartata.
     select.addEventListener('change', () => {
       setSelectedStorageProviderId(select.value);

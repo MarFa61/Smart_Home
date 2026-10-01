@@ -1,34 +1,31 @@
 /* =========================================================
    ISTANZA CONDIVISA DEL PROVIDER DI STORAGE
    Un solo provider per tutta l'app: sia il pannello Config sia
-   Devices/Tables usano questa stessa istanza, per non avere due
-   sessioni MSAL indipendenti.
+   Devices/Tables usano questa stessa istanza, con un unico stato
+   di connessione.
    Il provider concreto è scelto dal selettore in Config → salvato in
    localStorage (per browser/device, come ColumnWidthStore) → richiede
    un ricaricamento pagina per cambiare, niente switch "a caldo" di due
    provider nella stessa sessione.
-   OneDrive è stato messo da parte: OneDriveProvider.js e
-   createStorageProvider() restano funzionanti nel codice, nel caso
-   servisse di nuovo in futuro, ma non compare tra i provider
-   disponibili (AVAILABLE_STORAGE_PROVIDERS sotto) — per riattivarlo
-   basta aggiungere una riga lì, la UI in Config (colori-ui.js) mostra
-   da sola un selettore invece del solo nome quando ce n'è più di uno.
-   Stessa sorte per Azure SQL (AzureSqlProvider.js), sostituito da
-   PostgreSQL locale sul minipc Proxmox (PostgresProvider.js).
+   Oggi l'unico provider è PostgreSQL locale sul minipc Proxmox
+   (PostgresProvider.js). OneDrive e Azure SQL, usati in passato, sono
+   stati rimossi dal codice (recuperabili dalla cronologia git). Per
+   aggiungere un provider basta una riga in AVAILABLE_STORAGE_PROVIDERS
+   e un caso in createStorageProvider(): la UI in Config (colori-ui.js)
+   mostra da sola un selettore invece del solo nome quando ce n'è più
+   di uno.
    ========================================================= */
 
 const STORAGE_PROVIDER_KEY = 'smarthome.storageProvider';
 
 // Unica voce oggi: nessuna vera scelta, quindi Config mostra il nome fisso invece di un
-// tendina — vedi colori-ui.js. Per riabilitare OneDrive o Azure SQL: aggiungere
-// { id: 'onedrive', label: 'OneDrive' } o { id: 'azuresql', label: 'Azure SQL' } qui.
+// tendina — vedi colori-ui.js.
 const AVAILABLE_STORAGE_PROVIDERS = [
   { id: 'postgres', label: 'PostgreSQL' },
 ];
 
-// Ignora un valore salvato che non è (più) tra quelli disponibili — es. "onedrive" rimasto
-// in localStorage da prima che fosse tolto dalla UI: senza questo controllo l'app tornava a
-// istanziare silenziosamente OneDriveProvider nonostante non fosse più selezionabile.
+// Ignora un valore salvato che non è (più) tra quelli disponibili — es. "onedrive" o
+// "azuresql" rimasti in localStorage da provider ormai rimossi.
 function getSelectedStorageProviderId() {
   const stored = localStorage.getItem(STORAGE_PROVIDER_KEY);
   const isValid = AVAILABLE_STORAGE_PROVIDERS.some(p => p.id === stored);
@@ -40,9 +37,7 @@ function setSelectedStorageProviderId(id) {
 }
 
 function createStorageProvider(id) {
-  if (id === 'postgres') return new PostgresProvider(STORAGE_CONFIG);
-  if (id === 'azuresql') return new AzureSqlProvider(STORAGE_CONFIG);
-  return new OneDriveProvider(STORAGE_CONFIG);
+  return new PostgresProvider(STORAGE_CONFIG);
 }
 
 const appStorage = createStorageProvider(getSelectedStorageProviderId());
@@ -69,8 +64,8 @@ function notifyStorageConnectionChange(connected) {
 }
 
 // Ricaricando la pagina con una sessione già attiva, tryRestoreSession() la ritrova
-// subito (solo lettura della cache MSAL, istantanea) ma il primo recupero dati vero e
-// proprio — rinnovo silenzioso del token, eventuale risveglio del backend — può
+// subito (solo lettura di localStorage, istantanea) ma il primo recupero dati vero e
+// proprio — eventuale backend lento a rispondere — può
 // richiedere alcuni secondi. Senza indicazione, in quella finestra l'utente vede le
 // varie sezioni con stati apparentemente incoerenti (una già "connessa", un'altra
 // ancora no) e rischia di mettersi a cliccare in giro inutilmente. Le 3 sezioni

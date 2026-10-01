@@ -8,7 +8,7 @@
    connect()/disconnect() si limitano a verificare che il backend
    risponda e a ricordare in localStorage lo stato scelto dall'utente,
    così Connect/Disconnect in Config e la riconnessione automatica al
-   reload funzionano come con i provider precedenti.
+   reload funzionano come con i provider precedenti (OneDrive, Azure SQL).
    ========================================================= */
 
 const POSTGRES_CONNECTED_KEY = 'smarthome.postgresConnected';
@@ -35,7 +35,7 @@ class PostgresProvider extends StorageProvider {
     localStorage.setItem(POSTGRES_CONNECTED_KEY, 'true');
   }
 
-  /** Vedi OneDriveProvider.tryRestoreSession(): stessa logica, nessuna richiesta di rete. */
+  /** Ritrova lo stato scelto dall'utente all'ultimo Connect/Disconnect, nessuna richiesta di rete. */
   async tryRestoreSession() {
     this._connected = localStorage.getItem(POSTGRES_CONNECTED_KEY) === 'true';
     return this._connected;

@@ -79,7 +79,7 @@ const DEVICES_COLUMNS = [
 ];
 
 // Ordinamento persistito in localStorage (preferenza del browser/device, come le
-// larghezze colonna in ColumnWidthStore, non dato business: non va su OneDrive) —
+// larghezze colonna in ColumnWidthStore, non dato business: non va nel database) —
 // altrimenti si perdeva ad ogni ricaricamento della pagina.
 const DEVICES_SORT_KEY = 'devicesSort';
 function loadDevicesSort() {

@@ -1,6 +1,6 @@
 /* =========================================================
    ICONA STATO CONNESSIONE — sostituisce il testo "Connesso/Non
-   connesso a OneDrive" con un'illustrazione differenziata per
+   connesso" al database con un'illustrazione differenziata per
    dispositivo (Mac mini / iPad / iPhone); il testo resta come
    tooltip (attributo title) e come alternativa testuale se il
    dispositivo non è tra i 3 riconosciuti.
@@ -40,7 +40,7 @@ function setConnStatusIcon(el, connected, fallbackText) {
   el.innerHTML = '';
   const img = document.createElement('img');
   img.src = src;
-  img.alt = connected ? 'Connected to OneDrive' : 'Not connected to OneDrive';
+  img.alt = fallbackText;
   img.title = fallbackText;
   img.className = 'conn-status-icon';
   el.appendChild(img);

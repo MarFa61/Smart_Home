@@ -1,7 +1,7 @@
 /* =========================================================
    LARGHEZZE COLONNE — equivalente JS di ColumnWidthStore.swift
    Persistite in localStorage per tableID (preferenza del
-   browser/device, non dato business: non va su OneDrive,
+   browser/device, non dato business: non va nel database,
    stessa scelta di Incarichi con UserDefaults).
    ========================================================= */
 

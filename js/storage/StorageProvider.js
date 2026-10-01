@@ -1,11 +1,11 @@
 /* =========================================================
    CONTRATTO DI STORAGE ASTRATTO
    Nessuna parte dell'app fuori da questo folder deve conoscere
-   dettagli del provider concreto (OneDrive, o un domani altro).
+   dettagli del provider concreto (oggi PostgreSQL, o un domani altro).
    ========================================================= */
 
 class StorageProvider {
-  /** Nome visualizzato del provider (es. "OneDrive"), per i messaggi di stato in UI. */
+  /** Nome visualizzato del provider (es. "PostgreSQL"), per i messaggi di stato in UI. */
   get providerName() { throw new Error('providerName non implementato'); }
 
   /** Avvia l'autenticazione con il provider. */
