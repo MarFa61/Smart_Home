@@ -1,4 +1,4 @@
-# TODO — Smart Home (analisi Excel, architettura, prima versione, pubblicazione GitHub Pages, import dati reali, rifinitura colonne Devices, migrazione backend verso Azure SQL, connessione unica per l'app, tab "Fields & Help", riorganizzazione dialog Device, migrazione a PostgreSQL locale sul minipc)
+# TODO — Smart Home (analisi Excel, architettura, prima versione, pubblicazione GitHub Pages, import dati reali, rifinitura colonne Devices, migrazione backend verso Azure SQL, connessione unica per l'app, tab "Fields & Help", riorganizzazione dialog Device, migrazione a PostgreSQL locale sul minipc, connessione automatica, adattamenti iPhone/iPad)
 
 ## Fatto — sessione 2026-08-30
 
@@ -433,6 +433,40 @@
   configurazione Entra/Azure: PostgreSQL è l'unico provider (codice precedente recuperabile dalla
   cronologia git). Alt text dell'icona di stato non più fisso su "OneDrive". Cancellato
   `Backend/local.settings.json` (credenziali Azure SQL).
+
+## Fatto — sessione 2026-10-01 — Connessione automatica, adattamenti iPhone/iPad
+
+- **Connessione automatica al DB**: all'apertura l'app si connette sempre da sola, su qualsiasi
+  dispositivo (`PostgresProvider.tryRestoreSession()` verifica davvero che il DB risponda, non
+  più uno stato ricordato in localStorage). Tolti Connect/Disconnect da Config: resta solo un
+  pulsante **Retry**, visibile solo se il DB non risponde (insieme all'icona "non connesso" e al
+  messaggio "Database not reachable…" in Config e Tables).
+- **Classe per dispositivo** sul documento (`device-iphone` / `device-ipad` / `device-mac-mini`,
+  impostata da `device-status-icon.js` con la stessa rilevazione dell'icona di stato): base di
+  tutti gli adattamenti sotto, in `theme.css`.
+- **iPhone**:
+  - avviso a tutto schermo "Rotate your iPhone to landscape…" in verticale (Safari non permette
+    di bloccare l'orientamento);
+  - app a tutto schermo se aggiunta alla schermata Home (manifest + meta Apple); nuova icona
+    app (casetta bianca su blu `#0066cc`, in `img/app-icon/`, sorgente SVG incluso);
+  - barra laterale di sole icone (56px invece di 220px);
+  - interfaccia compatta: margini, titoli, icona di stato, righe di tabella più bassi; campo
+    di ricerca e campi del dialog Device a 16px (sotto questa soglia Safari ingrandisce la
+    pagina al tocco);
+  - dialog Device a tutto schermo: titolo, tab e pulsanti fissi, scorre solo il contenuto
+    del tab; le 3 colonne restano (larghezza sufficiente in orizzontale);
+  - barra dei tab di Tables scorrevole dentro il riquadro (prima, larga circa 1000px,
+    allargava l'area dei contenuti lasciando una striscia grigia a destra).
+- **iPad e iPhone**: colonne di Devices ridimensionabili anche con il dito (eventi pointer
+  invece di mouse, `touch-action: none` sulla maniglia, maniglia larga 16px invece di 6px).
+- **Provato e annullato**: gestione delle aree di sicurezza (`viewport-fit=cover` +
+  `env(safe-area-inset-*)`) per eliminare le bande laterali grigie su iPhone in orizzontale.
+  Nessun cambiamento visibile sul dispositivo: ripristinata la versione precedente, le bande
+  restano (non considerato un problema).
+- **Banco di prova**: le correzioni di layout sono state verificate prima in un banco nello
+  scratchpad (copia dell'app, API finta senza dati reali, Chrome headless via puppeteer-core
+  con user agent iPhone/iPad). Limite: Chrome non simula le aree di sicurezza di iOS.
+- **Confermato da Marco** su iPhone e iPad.
 
 ## Da fare — prossimo passo
 
