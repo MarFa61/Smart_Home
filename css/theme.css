@@ -1416,3 +1416,19 @@ html.device-iphone #deviceDlg select,
 html.device-iphone #deviceDlg textarea {
   font-size: 16px;
 }
+
+/* iPhone: barra dei tab di Tables scorrevole in orizzontale dentro il riquadro. Senza,
+   la barra (circa 1000px) usciva dal riquadro e allargava tutta l'area dei contenuti,
+   lasciando a destra una striscia di sfondo grigio. */
+html.device-iphone #tabelleTabsBar {
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+html.device-iphone #tabelleTabsBar > * {
+  flex-shrink: 0;
+}
+
+html.device-iphone #tabelleTabsBar .tab-btn {
+  white-space: nowrap;
+}
