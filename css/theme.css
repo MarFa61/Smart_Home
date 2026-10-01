@@ -1283,3 +1283,27 @@ dialog::backdrop {
   height: 72px;
   color: var(--primary);
 }
+
+/* iPhone: barra laterale di sole icone, per lasciare più larghezza al contenuto. Il nome
+   della sezione resta visibile nel titolo della pagina dopo il tocco. */
+html.device-iphone .sidebar {
+  width: 56px;
+  min-width: 56px;
+  padding-top: 12px;
+}
+
+html.device-iphone .sidebar-brand,
+html.device-iphone .sidebar-label {
+  display: none;
+}
+
+html.device-iphone .sidebar-item {
+  justify-content: center;
+  gap: 0;
+  padding: 12px 0;
+}
+
+html.device-iphone .sidebar-item .icon {
+  font-size: 22px;
+  width: auto;
+}
