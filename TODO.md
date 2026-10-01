@@ -426,12 +426,20 @@
 - **Verificato da Claude**: smoke test del DB, risposte API, conflitto 412, ripartenza del servizio
   dopo il riavvio del container. **Non ancora testato dal vivo da Marco.**
 
+## Fatto — sessione 2026-10-01 — Rimozione di Azure SQL e OneDrive dal codice
+
+- Verificato da Marco: l'app su PostgreSQL funziona.
+- Rimossi `AzureSqlProvider.js`, `OneDriveProvider.js`, MSAL (`js/vendor/msal-browser.min.js`) e la
+  configurazione Entra/Azure: PostgreSQL è l'unico provider (codice precedente recuperabile dalla
+  cronologia git). Alt text dell'icona di stato non più fisso su "OneDrive". Cancellato
+  `Backend/local.settings.json` (credenziali Azure SQL).
+
 ## Da fare — prossimo passo
 
-- [ ] Verificare dal vivo l'app su http://10.0.0.27/ (Connect in Config, dati, salvataggio).
-- [ ] Quando convinto: spegnere/cancellare le risorse Azure (Function App smarthome-api-mfasani,
-      server SQL smarthome-sql-mfasani con regola firewall per 151.32.203.22, app registration
-      Entra) e disattivare GitHub Pages, ora non più funzionante.
+- [x] Verificare dal vivo l'app su http://10.0.0.27/ (Connect in Config, dati, salvataggio).
+- [ ] Cancellare le risorse cloud (azione di Marco): gruppo di risorse Azure con Function App e
+      server SQL, le due registrazioni Entra (frontend ea23c586… e smarthome-api-mfasani), GitHub
+      Pages di Smart_Home, secret AZUREAPPSERVICE_* del repo smarthome-backend.
 - [ ] Facoltativo: revocare la chiave SSH di Claude (riga "claude-code@mac-marco" in
       /root/.ssh/authorized_keys su `pve` e su `dbserver`).
 - [ ] Importare (azione di Marco, quando vuole) `smarthome-backup-20260906-173548-devgroup-connectedto-fix.json`
@@ -444,14 +452,6 @@
 - [ ] Verificare dal vivo lo scenario di conflitto su PostgreSQL (due sessioni che salvano sulla
       stessa risorsa quasi in contemporanea) — non ancora testato, solo verificato su OneDrive in
       sessioni precedenti.
-
-- [ ] Login OneDrive in locale: errore Microsoft "invalid_request: redirect_uri non
-      valido" riscontrato da Marco durante un test di sessione precedente — non più rilevante ora
-      che OneDrive non è raggiungibile dalla UI, ma da verificare se venisse mai riattivato
-      (l'URL esatto in barra indirizzi deve corrispondere al redirect URI registrato su Entra ID,
-      dovrebbe essere `http://localhost:5500/`).
-      Non ancora risolto, interrotto per passare ad altro.
-      Riscontrato anche con Azure SQL il 2026-09-30; non più rilevante dopo il passaggio a PostgreSQL.
 
 - [ ] Altre "scene" di Colori oltre a "Finestra e tabella" (es. Bottoni, Badge, Campi form) — stesso
       pattern a insiemi finiti chiaro/scuro, non ancora estese.
