@@ -188,7 +188,6 @@ async function loadAndShowConfig() {
 
   setConnStatusIcon(document.getElementById('configConnStatus'), true, `Connected to ${appStorage.providerName} (${appStorage.connectedAccountEmail()}).`);
   document.getElementById('btnConfigConnect').style.display = 'none';
-  document.getElementById('btnConfigDisconnect').style.display = 'inline-block';
   document.getElementById('configConnectPlaceholder').style.display = 'none';
   document.getElementById('configTabsArea').style.display = 'block';
 }
@@ -239,14 +238,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  document.getElementById('btnConfigDisconnect').addEventListener('click', async () => {
-    await appStorage.disconnect();
+  // Database non raggiungibile all'apertura (vedi autoReconnectAndLoad in app-storage.js):
+  // compare il pulsante Retry, l'unico controllo di connessione rimasto.
+  onStorageConnectionChange(connected => {
+    if (connected) return;
     setConnStatusIcon(document.getElementById('configConnStatus'), false, `Not connected to ${appStorage.providerName}.`);
     document.getElementById('btnConfigConnect').style.display = 'inline-block';
-    document.getElementById('btnConfigDisconnect').style.display = 'none';
     document.getElementById('configTabsArea').style.display = 'none';
     document.getElementById('configConnectPlaceholder').style.display = 'block';
-    notifyStorageConnectionChange(false);
   });
 
   document.getElementById('btnColoriSave').addEventListener('click', saveColori);
@@ -267,7 +266,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnColoriResetChiaro').addEventListener('click', () => resetTemaEShow('chiaro', 'Light'));
   document.getElementById('btnColoriResetScuro').addEventListener('click', () => resetTemaEShow('scuro', 'Dark'));
 
-  // Connessione automatica: se una sessione era già attiva (anche stabilita
-  // da un'altra sezione), si salta il pulsante "Connetti" e si carica direttamente.
+  // Connessione automatica all'apertura: si carica direttamente, senza pulsanti.
   autoReconnectAndLoad(loadAndShowConfig);
 });

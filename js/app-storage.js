@@ -42,17 +42,16 @@ function createStorageProvider(id) {
 
 const appStorage = createStorageProvider(getSelectedStorageProviderId());
 
-// Avviato subito, prima che qualunque sezione si inizializzi: se una sessione
-// era già attiva (login precedente), la ritrova senza popup, per una connessione
-// automatica. Ogni sezione deve attendere questa promise prima di controllare
+// Avviato subito, prima che qualunque sezione si inizializzi: connessione automatica
+// al database, senza azioni dell'utente. Ogni sezione deve attendere questa promise prima di controllare
 // appStorage.isConnected().
 const appStorageReady = appStorage.tryRestoreSession();
 
-// Il Connect/Disconnect vive solo in Config (unico punto di connessione per tutta
-// l'app, vedi colori-ui.js): Devices e Tables non hanno più i propri pulsanti, ma
-// devono comunque aggiornare la loro icona di stato — e caricare/svuotare i propri
-// dati — quando la connessione cambia altrove. notifyStorageConnectionChange() va
-// chiamata da Config dopo ogni connect()/disconnect() riuscito.
+// Connessione automatica all'apertura; l'unico controllo manuale è il pulsante Retry in
+// Config (colori-ui.js), visibile solo se il database non risponde. Devices e Tables
+// aggiornano la loro icona di stato — e caricano/svuotano i propri dati — quando la
+// connessione cambia: notifyStorageConnectionChange() è chiamata da Config dopo un
+// Retry riuscito e da autoReconnectAndLoad() se il database non risponde all'apertura.
 const _storageConnectionListeners = [];
 
 function onStorageConnectionChange(callback) {
@@ -63,9 +62,8 @@ function notifyStorageConnectionChange(connected) {
   _storageConnectionListeners.forEach(callback => callback(connected));
 }
 
-// Ricaricando la pagina con una sessione già attiva, tryRestoreSession() la ritrova
-// subito (solo lettura di localStorage, istantanea) ma il primo recupero dati vero e
-// proprio — eventuale backend lento a rispondere — può
+// All'apertura della pagina, dopo la connessione automatica, il primo recupero dati
+// vero e proprio — eventuale backend lento a rispondere — può
 // richiedere alcuni secondi. Senza indicazione, in quella finestra l'utente vede le
 // varie sezioni con stati apparentemente incoerenti (una già "connessa", un'altra
 // ancora no) e rischia di mettersi a cliccare in giro inutilmente. Le 3 sezioni
@@ -103,11 +101,20 @@ const RECONNECT_MODAL_DELAY_MS = 300;
  *  DOMContentLoaded di ogni sezione: incapsula il controllo (unificato, prima era
  *  incoerente tra sezioni) ed espone all'utente l'attesa della riconnessione
  *  automatica, ma solo se dura abbastanza da essere percepita (vedi
- *  RECONNECT_MODAL_DELAY_MS sopra). Nessun popup se non c'era alcuna sessione da
- *  ritrovare — in quel caso la sezione resta semplicemente "Not connected". */
+ *  RECONNECT_MODAL_DELAY_MS sopra). Se il database non risponde, nessun popup: le
+ *  sezioni ricevono una sola volta notifyStorageConnectionChange(false) e mostrano lo
+ *  stato "non connesso" (con il pulsante Retry in Config). */
+let _unavailableNotified = false;
+
 async function autoReconnectAndLoad(loadFn) {
   const giaConnesso = await appStorageReady;
-  if (!giaConnesso && !appStorage.isConnected()) return;
+  if (!giaConnesso && !appStorage.isConnected()) {
+    if (!_unavailableNotified) {
+      _unavailableNotified = true;
+      notifyStorageConnectionChange(false);
+    }
+    return;
+  }
 
   let shown = false;
   const timer = setTimeout(() => {

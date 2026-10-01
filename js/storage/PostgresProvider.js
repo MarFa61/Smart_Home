@@ -5,13 +5,9 @@
    che serve anche questa stessa pagina: API sulla stessa origine,
    quindi apiBaseUrl relativo e nessun CORS.
    Nessuna autenticazione (app raggiungibile solo dalla rete di casa):
-   connect()/disconnect() si limitano a verificare che il backend
-   risponda e a ricordare in localStorage lo stato scelto dall'utente,
-   così Connect/Disconnect in Config e la riconnessione automatica al
-   reload funzionano come con i provider precedenti (OneDrive, Azure SQL).
+   la connessione è automatica a ogni apertura dell'app, connect() si
+   limita a verificare che backend e database rispondano.
    ========================================================= */
-
-const POSTGRES_CONNECTED_KEY = 'smarthome.postgresConnected';
 
 class PostgresProvider extends StorageProvider {
   /**
@@ -32,18 +28,20 @@ class PostgresProvider extends StorageProvider {
     // subito con un errore visibile invece di risultare "connesso" senza esserlo.
     await this.load('devices.json');
     this._connected = true;
-    localStorage.setItem(POSTGRES_CONNECTED_KEY, 'true');
   }
 
-  /** Ritrova lo stato scelto dall'utente all'ultimo Connect/Disconnect, nessuna richiesta di rete. */
+  /** Connessione automatica all'apertura: false (senza eccezione) se il database non risponde. */
   async tryRestoreSession() {
-    this._connected = localStorage.getItem(POSTGRES_CONNECTED_KEY) === 'true';
+    try {
+      await this.connect();
+    } catch (error) {
+      this._connected = false;
+    }
     return this._connected;
   }
 
   async disconnect() {
     this._connected = false;
-    localStorage.removeItem(POSTGRES_CONNECTED_KEY);
   }
 
   isConnected() {

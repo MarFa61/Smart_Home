@@ -6,9 +6,9 @@
   <title>Smart Home</title>
   <link rel="stylesheet" href="./css/theme.css?v=57">
   <script src="./js/storage/StorageProvider.js?v=51" defer></script>
-  <script src="./js/storage/PostgresProvider.js?v=2" defer></script>
+  <script src="./js/storage/PostgresProvider.js?v=3" defer></script>
   <script src="./js/storage/config.js?v=54" defer></script>
-  <script src="./js/app-storage.js?v=58" defer></script>
+  <script src="./js/app-storage.js?v=59" defer></script>
   <script src="./js/device-status-icon.js?v=36" defer></script>
   <script src="./js/config/HelpFieldsStore.js?v=6" defer></script>
   <script src="./js/field-help-icon.js?v=2" defer></script>
@@ -22,7 +22,7 @@
   <script src="./js/config/ConfigStore.js?v=34" defer></script>
   <script src="./js/config/color-components.js?v=35" defer></script>
   <script src="./js/config/ColorStore.js?v=33" defer></script>
-  <script src="./js/config/colori-ui.js?v=58" defer></script>
+  <script src="./js/config/colori-ui.js?v=59" defer></script>
   <script src="./js/config/fields-help-ui.js?v=2" defer></script>
   <script src="./js/config/backup-ui.js?v=52" defer></script>
   <script src="./js/app.js?v=34" defer></script>
@@ -83,7 +83,7 @@
               <tbody id="devicesTableBody"></tbody>
             </table>
           </div>
-          <p class="placeholder" id="devicesEmptyMessage">No devices. Connect via Config to get started.</p>
+          <p class="placeholder" id="devicesEmptyMessage">No devices.</p>
         </div>
       </section>
 
@@ -96,7 +96,7 @@
             </div>
           </div>
 
-          <p class="placeholder" id="tabelleConnectPlaceholder">Connect via Config to manage the support tables.</p>
+          <p class="placeholder" id="tabelleConnectPlaceholder" style="display:none;">Database not reachable. Use Retry in Config to try again.</p>
 
           <div id="tabelleTabsArea" style="display:none;">
             <div class="dlg-tabs" id="tabelleTabsBar"></div>
@@ -113,12 +113,11 @@
               <span style="font-size:13px; color:var(--text-secondary);">Storage:</span>
               <span id="storageProviderControl"></span>
               <div id="configConnStatus"></div>
-              <button class="btn edit" id="btnConfigConnect">Connect</button>
-              <button class="btn edit" id="btnConfigDisconnect" style="display:none;">Disconnect</button>
+              <button class="btn edit" id="btnConfigConnect" style="display:none;">Retry</button>
             </div>
           </div>
 
-          <p class="placeholder" id="configConnectPlaceholder">Connect to manage Backup &amp; Restore and Colors.</p>
+          <p class="placeholder" id="configConnectPlaceholder" style="display:none;">Database not reachable. Use Retry to try again.</p>
 
           <div id="configTabsArea" style="display:none;">
             <div class="dlg-tabs">

@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
   registerUnsavedChangesChecker(checkTabelleUnsavedChanges);
   setConnStatusIcon(document.getElementById('tabelleConnStatus'), false, `Not connected to ${appStorage.providerName}.`);
 
-  // Il Connect/Disconnect vive solo in Config (connessione unica per tutta l'app):
+  // Connessione automatica, con il solo Retry in Config (connessione unica per tutta l'app):
   // qui si reagisce ai cambi di stato decisi lì, senza pulsanti propri.
   onStorageConnectionChange(connected => {
     if (connected) {
