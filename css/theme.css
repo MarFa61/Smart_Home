@@ -1254,3 +1254,32 @@ dialog::backdrop {
   font-size: 13px;
   color: var(--text-color);
 }
+
+/* Avviso "ruota l'iPhone": solo su iPhone in verticale (vedi index.html). */
+.rotate-overlay {
+  display: none;
+}
+
+@media (orientation: portrait) {
+  html.device-iphone .rotate-overlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 24px;
+    background: var(--bg-main);
+    color: var(--title-color);
+    text-align: center;
+    font-size: 17px;
+  }
+}
+
+.rotate-overlay-icon {
+  width: 72px;
+  height: 72px;
+  color: var(--primary);
+}

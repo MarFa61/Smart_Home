@@ -22,6 +22,10 @@ function detectAppleDeviceKind() {
 }
 
 const APP_DEVICE_KIND = detectAppleDeviceKind();
+
+// Classe sul documento (device-iphone / device-ipad / device-mac-mini) per gli adattamenti
+// di layout per dispositivo in theme.css — stessa rilevazione dell'icona di stato.
+if (APP_DEVICE_KIND) document.documentElement.classList.add(`device-${APP_DEVICE_KIND}`);
 const CONN_STATUS_ICON_VERSION = 15;
 
 /** null se il dispositivo non è tra i 3 riconosciuti (vedi detectAppleDeviceKind). */

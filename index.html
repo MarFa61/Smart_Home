@@ -4,12 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Home</title>
-  <link rel="stylesheet" href="./css/theme.css?v=57">
+  <!-- App a tutto schermo se aggiunta alla schermata Home ("Aggiungi a Home" da Safari):
+       niente barre di Safari, più spazio soprattutto in altezza su iPhone in orizzontale. -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Smart Home">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="./img/app-icon/apple-touch-icon.png">
+  <link rel="stylesheet" href="./css/theme.css?v=58">
   <script src="./js/storage/StorageProvider.js?v=51" defer></script>
   <script src="./js/storage/PostgresProvider.js?v=3" defer></script>
   <script src="./js/storage/config.js?v=54" defer></script>
   <script src="./js/app-storage.js?v=59" defer></script>
-  <script src="./js/device-status-icon.js?v=36" defer></script>
+  <script src="./js/device-status-icon.js?v=37" defer></script>
   <script src="./js/config/HelpFieldsStore.js?v=6" defer></script>
   <script src="./js/field-help-icon.js?v=2" defer></script>
   <script src="./js/devices/lookups.js?v=34" defer></script>
@@ -32,6 +40,16 @@
        su iPhone) servano una versione in cache invece di quella nuova. -->
 </head>
 <body>
+  <!-- iPhone in verticale: l'app non è utilizzabile e Safari non permette di bloccare
+       l'orientamento, quindi un avviso a tutto schermo (vedi .rotate-overlay in theme.css,
+       classe device-iphone impostata da device-status-icon.js). -->
+  <div class="rotate-overlay" aria-live="polite">
+    <svg class="rotate-overlay-icon" viewBox="0 0 64 64" aria-hidden="true">
+      <rect x="8" y="18" width="48" height="28" rx="5" fill="none" stroke="currentColor" stroke-width="3"/>
+      <circle cx="50" cy="32" r="2" fill="currentColor"/>
+    </svg>
+    <p>Rotate your iPhone to landscape to use Smart Home.</p>
+  </div>
 
   <div class="app-shell">
     <nav class="sidebar">

@@ -1,0 +1,14 @@
+{
+  "name": "Smart Home",
+  "short_name": "Smart Home",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#f4f6f9",
+  "theme_color": "#0066cc",
+  "icons": [
+    { "src": "img/app-icon/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "img/app-icon/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
